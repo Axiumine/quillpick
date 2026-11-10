@@ -18,8 +18,8 @@ a SemIf.
 **Runtime: [llama.cpp](https://github.com/ggml-org/llama.cpp)** (dal 22 settembre 2026), quindi
 GPU Apple, NVIDIA, AMD e Intel oppure sola CPU, senza compilare nulla. MLX, il runtime originale
 del progetto, resta disponibile con `--backend mlx`. Verificato con i pesi reali su Windows 10 +
-RTX 5060 Ti (build CUDA e build Vulkan): 65 test superati, API funzionante, smoke Q8_0 0.95 con
-66 ms di mediana. Segnalazioni pubbliche descrivono anche prove su Mac M3 Pro/Metal, Radeon 780M e
+RTX 5060 Ti (build CUDA e build Vulkan), secondo il progetto originale (non rimisurato da questo
+fork): 65 test superati, API funzionante, smoke Q8_0 0.95 con 66 ms di mediana. Segnalazioni pubbliche descrivono anche prove su Mac M3 Pro/Metal, Radeon 780M e
 Intel Iris Xe/Vulkan, oltre alla modalità CPU su un portatile Intel; non sono state riprodotte dai
 manutentori originali ([#5](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/5), [#7](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/7), [#11](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/11)). Risultati, errori e limiti sono in [results/README.md](../results/README.md).
 

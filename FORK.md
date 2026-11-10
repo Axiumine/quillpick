@@ -30,7 +30,7 @@ changes" below.
 
 ## What this fork adds
 
-The 57 commits, counted from `git log b9ba007..`:
+The 57 commits, counted from `git log b9ba007..52afa67`:
 
 - **29 commits that fix defects.** 24 of them change code in `src/rizzo_flow`; the other 5 raise the
   Python floor to 3.11.4 and the FastAPI floor to 0.132, fix the skill client and the report
@@ -91,8 +91,10 @@ Jev or SemIf.
   [#27](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/27) and
   [#28](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/28) fix the same two bugs as
   commits `04dd8bf` (a complete `.part` file on HTTP 416) and `0d64b5b` (check `--output` before the
-  weights load) of this series. The fixes were written independently, and their pull requests were
-  opened the same day as those commits.
+  weights load) of this series. Their pull requests were opened on 2026-09-29, before those commits
+  were dated; the author's account of the timeline is in
+  [upstream issue #29](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/29). Either set of
+  changes can replace the other.
 
 ## Upstream pull requests not merged here yet
 
@@ -124,6 +126,8 @@ upstream:
 - the `RIZZO_*` environment variables;
 - the served model ids (`rizzo-latest`, `rizzo-flow-*`, `rizzo-spark-*`);
 - the Hugging Face repositories `rizzoaiacademy/*`, with their revisions and sha256 pins;
+- the agent skill folder and name `skills/rizzo-flow` and the downloader's HTTP User-Agent
+  `rizzo-flow`;
 - the `results/` and `benchmarks/` folders, which are historical, create-only data covered by
   `results/SHA256SUMS`, so they still say "Rizzo Flow".
 
