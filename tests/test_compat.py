@@ -103,7 +103,7 @@ def test_validation_models_and_auth(body):
         assert http.post("/v1/systemone", json=unknown_question_field).status_code == 422
         body["questions"]["frustration"]["criteria"] = ["only one"]
         assert http.post("/v1/systemone", json=body).status_code == 422
-        assert "Rizzo Flow" in http.get("/playground").text
+        assert "Quillpick" in http.get("/playground").text
         assert "/v1/decisions" in http.get("/snake").text
         assert http.get("/playground/logo.png").headers["content-type"] == "image/png"
     with client(api_key="secret") as http:

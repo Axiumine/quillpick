@@ -670,7 +670,7 @@ def test_help_lists_exactly_the_subcommands(rizzo):
 # Every help text of the command line, as `--help` prints it (line breaks aside).
 HELP = {
     (): [
-        r"Rizzo Flow \N{EM DASH} local Spark typed decisions",
+        r"Quillpick \N{EM DASH} local Spark typed decisions",
         "Download the pinned llama.cpp runtime for this machine and the weights",
         "Print the JSON Schema for requests",
         "Show which compute backends this install can use",
@@ -679,7 +679,7 @@ HELP = {
     ("download",): [
         "GGUF file",
         (
-            "flow = our fine-tune for typed decisions (default), "
+            "flow = the Rizzo Flow fine-tune for typed decisions (default), "
             "base = the original Spark-X2.5 GGUF files"
         ),
         (
@@ -693,7 +693,7 @@ HELP = {
         "GGUF file (MLX: checkpoint directory)",
         "Pinned GGUF file; default q8_0",
         (
-            "Pinned weights: flow = our fine-tune for typed decisions (default), "
+            "Pinned weights: flow = the Rizzo Flow fine-tune for typed decisions (default), "
             "base = the original Spark-X2.5 GGUF files"
         ),
         "MLX backend only",
@@ -714,7 +714,7 @@ def test_help_documents_the_commands_and_their_options(rizzo, argv):
     assert err == ""
     text = " ".join(out.split())
     for phrase in HELP[argv]:
-        pattern = phrase if phrase.startswith("Rizzo Flow") else re.escape(phrase)
+        pattern = phrase if phrase.startswith("Quillpick") else re.escape(phrase)
         assert re.search(rf"(?<!\w){pattern}(?!\w)", text), phrase
 
 

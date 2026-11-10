@@ -81,7 +81,8 @@ def main():
     # Named, not taken from sys.argv: Python 3.14 calls a script that runs from an archive, as the
     # console scripts of Windows do, `python.exe <path>`, in every usage line and error message.
     parser = argparse.ArgumentParser(
-        prog="rizzo", description="Rizzo Flow — local Spark typed decisions"
+        prog="rizzo",
+        description="Quillpick — local Spark typed decisions (unofficial fork of Rizzo Flow)",
     )
     commands = parser.add_subparsers(dest="command", required=True)
     download = commands.add_parser(
@@ -93,7 +94,7 @@ def main():
     download.add_argument(
         "--weights",
         choices=VARIANTS,
-        help="flow = our fine-tune for typed decisions (default), "
+        help="flow = the Rizzo Flow fine-tune for typed decisions (default), "
         "base = the original Spark-X2.5 GGUF files",
     )
     download.add_argument(
@@ -122,7 +123,7 @@ def main():
         p.add_argument(
             "--weights",
             choices=VARIANTS,
-            help="Pinned weights: flow = our fine-tune for typed decisions (default), "
+            help="Pinned weights: flow = the Rizzo Flow fine-tune for typed decisions (default), "
             "base = the original Spark-X2.5 GGUF files",
         )
         p.add_argument("--bits", type=int, choices=(4, 8), help="MLX backend only")

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rizzo Flow Playground</title>
+<title>Quillpick Playground</title>
 <link rel="icon" type="image/png" href="/playground/logo.png">
 <style>
 :root {
@@ -25,10 +25,10 @@ body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 var(
 header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 20px;
   border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 5; }
 header h1 { font-size: 15px; margin: 0; letter-spacing: .01em; }
-.mascot { width: 40px; height: 40px; margin: -6px -2px -6px -4px; transform-origin: 50% 85%; cursor: pointer;
+.brandmark { width: 40px; height: 40px; margin: -6px -2px -6px -4px; transform-origin: 50% 85%; cursor: pointer;
   filter: drop-shadow(0 2px 3px rgb(0 0 0 / .25)); transition: transform .25s ease; }
-.mascot:hover { animation: wiggle .6s ease-in-out; }
-body.busy .mascot { animation: hop .55s ease-in-out infinite; }
+.brandmark:hover { animation: wiggle .6s ease-in-out; }
+body.busy .brandmark { animation: hop .55s ease-in-out infinite; }
 @keyframes wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-12deg); } 60% { transform: rotate(10deg); } 85% { transform: rotate(-4deg); } }
 @keyframes hop { 0%, 100% { transform: translateY(0) scale(1, 1); } 40% { transform: translateY(-7px) scale(.96, 1.05); } 70% { transform: translateY(0) scale(1.06, .94); } }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
@@ -38,7 +38,7 @@ body.busy .mascot { animation: hop .55s ease-in-out infinite; }
 .hello .say { font-size: 15px; color: var(--ink); font-weight: 600; margin-top: 4px; }
 footer { text-align: center; color: var(--muted); font-size: 12px; padding: 0 16px 26px; }
 footer a { color: inherit; }
-@media (prefers-reduced-motion: reduce) { .mascot, body.busy .mascot, .hello img { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .brandmark, body.busy .brandmark, .hello img { animation: none !important; } }
 header h1 span { color: var(--muted); font-weight: 400; }
 .badge { font: 12px var(--mono); padding: 3px 8px; border-radius: 999px; background: var(--track); color: var(--muted); }
 .badge.ok { background: var(--accent-soft); color: var(--accent); }
@@ -114,8 +114,8 @@ summary { cursor: pointer; color: var(--muted); font-size: 12.5px; }
 </head>
 <body>
 <header>
-  <img class="mascot" id="mascot" src="/playground/logo.png" alt="Rizzo Flow" data-i18n-attr="title:mascotTitle" width="40" height="40">
-  <h1>Rizzo Flow <span>playground</span></h1>
+  <img class="brandmark" id="brandmark" src="/playground/logo.png" alt="Quillpick" data-i18n-attr="title:logoTitle" width="40" height="40">
+  <h1>Quillpick <span>playground</span></h1>
   <span id="health" class="badge"></span>
   <span class="spacer"></span>
   <a href="/snake" style="color:var(--muted);font-size:13px">Snake</a>
@@ -186,7 +186,7 @@ summary { cursor: pointer; color: var(--muted); font-size: 12.5px; }
     <pre id="curl" hidden></pre>
   </section>
 </main>
-<footer>Rizzo Flow · <span data-i18n="footer"></span> <a href="https://www.rizzoaiacademy.com" target="_blank" rel="noopener">Rizzo AI Academy</a></footer>
+<footer>Quillpick · <span data-i18n="footer"></span> <a href="https://www.rizzoaiacademy.com" target="_blank" rel="noopener">Rizzo AI Academy</a></footer>
 
 <script>
 "use strict";
@@ -214,14 +214,14 @@ function h(tag, props = {}, ...kids) {
 const I18N = {
   it: {
     checking: "verifica…", offline: "offline", model: "modello", examples: "Esempi…", run: "Esegui", running: "In esecuzione…",
-    runTitle: "Cmd/Ctrl + Invio", mascotTitle: "Clicca il riccio per eseguire",
+    runTitle: "Cmd/Ctrl + Invio", logoTitle: "Clicca il logo per eseguire",
     request: "Richiesta", response: "Risposta", questions: "Domande", settings: "Impostazioni", visual: "Visuale",
     stateLabel: "State — testo libero oppure JSON (oggetto/array), prefillato una sola volta",
     builderHint: "Tutte le domande di una richiesta condividono la KV cache dello state e vengono valutate in microbatch. Gli ID non vengono inviati al modello. <code>instructions</code> e criteri accettano anche JSON.",
     endpointCompat: "POST /v1/systemone — formato compatibile TypeSafe (noul, choice, score)",
     endpointNative: "POST /v1/decisions — formato nativo (boolean, choice, score, numeric, policy)",
     requestBody: "Corpo della richiesta", apiKeyLabel: "API key (solo se il server usa RIZZO_API_KEY)",
-    footer: "un progetto",
+    footer: "fork non ufficiale della community; progetto originale:",
     helloSay: "Ciao! Dammi uno state e qualche domanda.",
     helloHint: "Premi <b>Esegui</b> o Cmd/Ctrl + Invio: decido senza generare nemmeno un token.",
     optional: "opzionale", choiceCriteria: "criteria — opzione → descrizione (vuota = null)",
@@ -240,14 +240,14 @@ const I18N = {
   },
   en: {
     checking: "checking…", offline: "offline", model: "model", examples: "Examples…", run: "Run", running: "Running…",
-    runTitle: "Cmd/Ctrl + Enter", mascotTitle: "Click the hedgehog to run",
+    runTitle: "Cmd/Ctrl + Enter", logoTitle: "Click the logo to run",
     request: "Request", response: "Response", questions: "Questions", settings: "Settings", visual: "Visual",
     stateLabel: "State — free text or JSON (object/array), prefilled only once",
     builderHint: "All questions in a request share the state's KV cache and are evaluated in micro-batches. IDs are never sent to the model. <code>instructions</code> and criteria also accept JSON.",
     endpointCompat: "POST /v1/systemone — TypeSafe-compatible format (noul, choice, score)",
     endpointNative: "POST /v1/decisions — native format (boolean, choice, score, numeric, policy)",
     requestBody: "Request body", apiKeyLabel: "API key (only if the server sets RIZZO_API_KEY)",
-    footer: "a project by",
+    footer: "unofficial community fork; original project:",
     helloSay: "Hi! Give me a state and a few questions.",
     helloHint: "Press <b>Run</b> or Cmd/Ctrl + Enter: I decide without generating a single token.",
     optional: "optional", choiceCriteria: "criteria — option → description (empty = null)",
@@ -600,7 +600,7 @@ $("#preset").onchange = (e) => { if (e.target.value) applyPreset(e.target.value)
 document.querySelectorAll("[data-add]").forEach((b) => (b.onclick = () => { questions.push(blank(b.dataset.add, questions.length + 1)); renderQuestions(); }));
 $("#state").oninput = save;
 $("#run").onclick = run;
-$("#mascot").onclick = run;
+$("#brandmark").onclick = run;
 document.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); run(); } });
 
 let restored = false;

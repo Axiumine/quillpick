@@ -1,4 +1,4 @@
-"""Rizzo Flow: typed decisions over local Spark logits."""
+"""Quillpick (unofficial fork of Rizzo Flow): typed decisions over local Spark logits."""
 
 from .runtime import prepare
 

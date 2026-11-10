@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Minimal Rizzo Flow client, standard library only.
+"""Minimal Quillpick client, standard library only.
 
     python rizzo_client.py request.json              # native API, compact summary
     python rizzo_client.py request.json --raw        # full JSON response
@@ -38,7 +38,7 @@ def call(url, body=None, key=None, timeout=300):
         sys.exit(f"HTTP {error.code}: {detail}")
     except urllib.error.URLError as error:
         sys.exit(
-            f"Rizzo Flow is not reachable at {url} ({error.reason}). "
+            f"Quillpick is not reachable at {url} ({error.reason}). "
             "Start it from the repository with `uv run rizzo serve`."
         )
 

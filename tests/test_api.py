@@ -551,7 +551,7 @@ def test_models_lists_the_alias_the_served_model_and_the_compatibility_alias():
 
 @pytest.mark.parametrize(
     ("route", "file", "marker"),
-    [("/playground", "PLAYGROUND", "Rizzo Flow"), ("/snake", "SNAKE", "/v1/decisions")],
+    [("/playground", "PLAYGROUND", "Quillpick"), ("/snake", "SNAKE", "/v1/decisions")],
 )
 def test_the_pages_are_served_from_the_package(route, file, marker):
     client, _ = make_client()
@@ -586,7 +586,7 @@ def test_the_pages_are_not_listed_in_the_openapi_document():
     document = client.get("/openapi.json").json()
     # The version is the API's own (it advances with the endpoints, not with the package).
     assert document["info"] == {
-        "title": "Rizzo Flow",
+        "title": "Quillpick",
         "version": "0.2.0",
         "description": "Typed decisions with a local Spark-X2.5 model; no text generation.",
     }

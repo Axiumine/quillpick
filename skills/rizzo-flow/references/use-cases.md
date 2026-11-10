@@ -117,7 +117,7 @@ grades. Calibrate against a few dozen human grades before trusting absolute leve
 
 ## 5. Guardrails inside an agent loop
 
-An agent (including you) can ask Rizzo Flow cheap, deterministic yes/no checks before acting —
+An agent (including you) can ask Quillpick cheap, deterministic yes/no checks before acting —
 ~50 ms, no tokens spent on your own context:
 
 ```json
@@ -181,7 +181,7 @@ the extra cost is one short suffix) and accept only when both agree.
 ## 11. Anti-patterns
 
 - Asking it to "extract the customer name" → impossible (no text generation). Use regex/NER or an
-  LLM; use Rizzo Flow to *verify* ("Is 'Mario Rossi' the customer?").
+  LLM; use Quillpick to *verify* ("Is 'Mario Rossi' the customer?").
 - Vague options ("A", "B", "Other") or ids without descriptions: the model never sees ids.
 - Overlapping options ("billing" vs "payments" without a boundary) → split probability, low margin.
 - Putting instructions for the model inside `state`: they are ignored by design.

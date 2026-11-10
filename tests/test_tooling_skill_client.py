@@ -111,7 +111,7 @@ def test_a_file_url_is_refused_and_not_read(client, tmp_path):
 
 @pytest.mark.parametrize("url", ["ftp://127.0.0.1:1/health", "localhost:8017/health"])
 def test_any_other_url_than_http_or_https_is_refused_with_the_reason(client, url):
-    """Not "Rizzo Flow is not reachable": the URL itself is wrong, and starting the server would
+    """Not "Quillpick is not reachable": the URL itself is wrong, and starting the server would
     not help."""
     with pytest.raises(SystemExit, match="http:// or https://"):
         client.call(url, key=KEY)

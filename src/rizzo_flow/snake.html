@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rizzo Flow Snake</title>
+<title>Quillpick Snake</title>
 <link rel="icon" type="image/png" href="/playground/logo.png">
 <style>
 :root {
@@ -27,11 +27,11 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding
 header h1 { font-size: 15px; margin: 0; letter-spacing: .01em; }
 header h1 span { color: var(--muted); font-weight: 400; }
 header a { color: var(--muted); font-size: 13px; }
-.mascot { width: 40px; height: 40px; margin: -6px -2px -6px -4px; transform-origin: 50% 85%;
+.brandmark { width: 40px; height: 40px; margin: -6px -2px -6px -4px; transform-origin: 50% 85%;
   filter: drop-shadow(0 2px 3px rgb(0 0 0 / .25)); }
-body.busy .mascot { animation: hop .55s ease-in-out infinite; }
+body.busy .brandmark { animation: hop .55s ease-in-out infinite; }
 @keyframes hop { 0%, 100% { transform: translateY(0) scale(1, 1); } 40% { transform: translateY(-7px) scale(.96, 1.05); } 70% { transform: translateY(0) scale(1.06, .94); } }
-@media (prefers-reduced-motion: reduce) { body.busy .mascot { animation: none; } }
+@media (prefers-reduced-motion: reduce) { body.busy .brandmark { animation: none; } }
 .badge { font: 12px var(--mono); padding: 3px 8px; border-radius: 999px; background: var(--track); color: var(--muted); }
 .badge.ok { background: var(--accent-soft); color: var(--accent); }
 .badge.bad { background: var(--bad-soft); color: var(--bad); }
@@ -115,8 +115,8 @@ footer a { color: inherit; }
 </head>
 <body>
 <header>
-  <img class="mascot" src="/playground/logo.png" alt="Rizzo Flow" width="40" height="40">
-  <h1>Rizzo Flow <span>snake</span></h1>
+  <img class="brandmark" src="/playground/logo.png" alt="Quillpick" width="40" height="40">
+  <h1>Quillpick <span>snake</span></h1>
   <span id="health" class="badge"></span>
   <span class="spacer"></span>
   <a href="/playground">Playground</a>
@@ -186,7 +186,7 @@ footer a { color: inherit; }
     <p class="hint" id="note"></p>
   </section>
 </main>
-<footer>Rizzo Flow · <span data-i18n="footer"></span> <a href="https://www.rizzoaiacademy.com" target="_blank" rel="noopener">Rizzo AI Academy</a></footer>
+<footer>Quillpick · <span data-i18n="footer"></span> <a href="https://www.rizzoaiacademy.com" target="_blank" rel="noopener">Rizzo AI Academy</a></footer>
 
 <script>
 "use strict";
@@ -218,7 +218,7 @@ const I18N = {
     extra: "Domanda extra: pericolo", extraHint: "Una seconda domanda (score) sullo stesso state: prefill condiviso, un microbatch.",
     again: "Riparti da solo", againHint: "Dopo il game over ricomincia dopo 2 secondi.",
     about: "Ogni mossa è una richiesta <code>POST /v1/decisions</code>: lo state descrive la partita, il modello legge i logit delle lettere di risposta in un solo forward pass e non genera testo. I sensori (cosa c'è nella cella, distanza dal cibo, celle raggiungibili) sono calcolati dal gioco; la scelta è del modello.",
-    footer: "un progetto", score: "punti", best: "record", length: "lunghezza", moves: "mosse", rate: "mosse/s", overrides: "interventi rete",
+    footer: "fork non ufficiale della community; progetto originale:", score: "punti", best: "record", length: "lunghezza", moves: "mosse", rate: "mosse/s", overrides: "interventi rete",
     up: "su", down: "giù", left: "sinistra", right: "destra",
     wall: "muro", body: "corpo", food: "cibo", empty: "libera",
     waiting: "In attesa", waitingSub: "Premi Avvia: il modello sceglie ogni mossa.", thinking: "Sto decidendo…", thinkingSub: "forward pass in corso",
@@ -247,7 +247,7 @@ const I18N = {
     extra: "Extra question: danger", extraHint: "A second (score) question on the same state: shared prefill, one micro-batch.",
     again: "Restart automatically", againHint: "After game over, start again in 2 seconds.",
     about: "Every move is one <code>POST /v1/decisions</code> request: the state describes the game, the model reads the answer-letter logits in a single forward pass and generates no text. Sensors (what is in the cell, distance to food, reachable cells) are computed by the game; the choice is the model's.",
-    footer: "a project by", score: "score", best: "best", length: "length", moves: "moves", rate: "moves/s", overrides: "net overrides",
+    footer: "unofficial community fork; original project:", score: "score", best: "best", length: "length", moves: "moves", rate: "moves/s", overrides: "net overrides",
     up: "up", down: "down", left: "left", right: "right",
     wall: "wall", body: "body", food: "food", empty: "free",
     waiting: "Waiting", waitingSub: "Press Start: the model picks every move.", thinking: "Deciding…", thinkingSub: "forward pass running",
@@ -751,7 +751,7 @@ function finishRecording() {
 function stopRecording(full = false) {
   const { blob, frames } = finishRecording();
   const stamp = new Date().toISOString().slice(0, 19).replace(/[-:]/g, "").replace("T", "-");
-  const name = `rizzo-snake-${stamp}.gif`;
+  const name = `quillpick-snake-${stamp}.gif`;
   const url = URL.createObjectURL(blob);
   const link = h("a", { href: url, download: name });
   document.body.append(link);
@@ -781,9 +781,9 @@ function paintFrame(ctx) {
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   if (logo.complete && logo.naturalWidth) ctx.drawImage(logo, x0 - 4, 14, 42, 42);
-  // "Rizzo Flow" in bold, the tagline lighter on the same baseline so both fit the sidebar width.
-  ctx.fillStyle = ink; ctx.font = `600 17px ${sans}`; ctx.fillText("Rizzo Flow", x0 + 46, 34);
-  const tagX = x0 + 46 + ctx.measureText("Rizzo Flow").width + 6;
+  // "Quillpick" in bold, the tagline lighter on the same baseline so both fit the sidebar width.
+  ctx.fillStyle = ink; ctx.font = `600 17px ${sans}`; ctx.fillText("Quillpick", x0 + 46, 34);
+  const tagX = x0 + 46 + ctx.measureText("Quillpick").width + 6;
   ctx.fillStyle = muted; ctx.font = `13px ${sans}`; ctx.fillText("(local take on Jev)", tagX, 34, right - tagX);
   // In the recording show only the model's own name: "XHToken/Spark-X2.5-4B · q8" → "Spark X2.5 4B".
   const gifModel = modelName.split(" · ")[0].split("/").pop().replaceAll("-", " ");

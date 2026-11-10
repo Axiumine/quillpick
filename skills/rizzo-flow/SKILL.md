@@ -1,11 +1,11 @@
 ---
 name: rizzo-flow
-description: Use Rizzo Flow, a local "System One" decision engine (Jev-compatible API on localhost:8017), to turn unstructured text or JSON into typed decisions with probabilities — yes/no, pick one of N options, a score on a rubric, or a number snapped to anchors — in ~50 ms and with zero generated tokens. Use this skill whenever an agent or a program needs to classify, route, triage, filter, gate, prioritize, grade or check items against criteria locally and cheaply, especially many items or many questions on the same document (support tickets, emails, CVs, contracts, invoices, logs, alerts, moderation, LLM-as-judge rubrics, agent guardrails, game/control loops); when the user mentions rizzo-flow, rizzo serve, /v1/decisions, /v1/systemone, typed decisions, noul, or a local Jev/TypeSafe replacement; or when writing code that calls those endpoints. Do NOT use it to generate, summarize, translate or extract free text.
+description: Use Quillpick (an unofficial fork of Rizzo Flow), a local "System One" decision engine (Jev-compatible API on localhost:8017), to turn unstructured text or JSON into typed decisions with probabilities — yes/no, pick one of N options, a score on a rubric, or a number snapped to anchors — in ~50 ms and with zero generated tokens. Use this skill whenever an agent or a program needs to classify, route, triage, filter, gate, prioritize, grade or check items against criteria locally and cheaply, especially many items or many questions on the same document (support tickets, emails, CVs, contracts, invoices, logs, alerts, moderation, LLM-as-judge rubrics, agent guardrails, game/control loops); when the user mentions quillpick, rizzo-flow, rizzo serve, /v1/decisions, /v1/systemone, typed decisions, noul, or a local Jev/TypeSafe replacement; or when writing code that calls those endpoints. Do NOT use it to generate, summarize, translate or extract free text.
 ---
 
-# Rizzo Flow
+# Quillpick
 
-Rizzo Flow answers **closed questions about a piece of evidence**. You give it a `state` (text or
+Quillpick (an unofficial community fork of Rizzo Flow; the `rizzo` command and the `rizzo-*` model ids keep the upstream names) answers **closed questions about a piece of evidence**. You give it a `state` (text or
 JSON) and a set of typed questions; it returns, for every question, a probability over the
 candidate answers read from one forward pass of a local LLM (Spark-X2.5-4B + LoRA fine-tune, run
 by llama.cpp). It never writes text: every answer is one of the options you declared, so the
@@ -13,7 +13,7 @@ output is always valid, typed JSON.
 
 Think of it as a **function call with judgment**: `f(state, question) -> typed value + distribution`.
 
-## Decide first: is this a Rizzo Flow job?
+## Decide first: is this a Quillpick job?
 
 Use it when **all** of these hold:
 

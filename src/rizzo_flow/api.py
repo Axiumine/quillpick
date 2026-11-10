@@ -70,7 +70,7 @@ def check_api_key(api_key=None):
 
 def create_app(engine, api_key=None):
     app = FastAPI(
-        title="Rizzo Flow",
+        title="Quillpick",
         version="0.2.0",
         description="Typed decisions with a local Spark-X2.5 model; no text generation.",
     )

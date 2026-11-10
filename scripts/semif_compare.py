@@ -1,4 +1,4 @@
-"""Run SemIf's own fixtures through Rizzo Flow (llama.cpp or MLX) or SemIf's MLX backend.
+"""Run SemIf's own fixtures through Quillpick (llama.cpp or MLX) or SemIf's MLX backend.
 
 Both systems see the same rows, are scored by SemIf's `benchmarks/evaluate.py`, and are timed
 with the scope SemIf documents: warm model; prompt construction, tokenization, forward passes

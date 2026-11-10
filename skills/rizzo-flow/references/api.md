@@ -1,4 +1,4 @@
-# Rizzo Flow API reference
+# Quillpick API reference
 
 Server: `rizzo serve` → `http://127.0.0.1:8017` (flags `--host`, `--port`). One model resident;
 concurrent requests are queued and run one at a time (parallelism is *inside* a request).

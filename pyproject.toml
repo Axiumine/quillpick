@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "rizzo-flow"
+name = "quillpick"
 version = "0.1.0"
-description = "Local typed decisions and numeric estimates with Spark-X2.5-4B"
+description = "Quillpick, an unofficial community fork of Rizzo Flow: local typed decisions and numeric estimates with Spark-X2.5-4B"
 # 3.11.4: llama_release.unpack extracts with tarfile's filter="data" (PEP 706), which the
 # 3.11.0 to 3.11.3 releases do not have.
 requires-python = ">=3.11.4"
@@ -15,6 +15,12 @@ requires-python = ">=3.11.4"
 # Content-Type is not read as JSON. Before, a body with no Content-Type at all was, and a page on
 # another site can send that to the local API without a CORS preflight.
 dependencies = ["pydantic>=2.11,<3", "fastapi>=0.132,<1", "uvicorn>=0.34,<1", "jinja2>=3.1,<4"]
+
+[project.urls]
+Homepage = "https://github.com/Axiumine/quillpick"
+Repository = "https://github.com/Axiumine/quillpick"
+Issues = "https://github.com/Axiumine/quillpick/issues"
+Upstream = "https://github.com/Rizzo-AI-Academy/rizzo-flow"
 
 [project.optional-dependencies]
 # Optional second runtime (`--backend mlx`): pick at most one. All three are MLX, only the
