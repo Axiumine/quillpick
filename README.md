@@ -1,14 +1,19 @@
+> **Quillpick is an unofficial community fork of [Rizzo Flow](https://github.com/Rizzo-AI-Academy/rizzo-flow) by Simone Rizzo / Rizzo AI Academy (Apache-2.0). Not affiliated with, endorsed or maintained by the upstream authors.**
+>
+> [Upstream repository](https://github.com/Rizzo-AI-Academy/rizzo-flow) · [Upstream issue #29](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/29) · [FORK.md: why this fork exists and what it changes](FORK.md)
+
 <div align="center">
 
-<img src="assets/rizzo_flow_logo.png" alt="Rizzo Flow mascot — a purple hedgehog holding an infinity-shaped flow of arrows" width="200" />
+<img src="assets/quillpick_logo.png" alt="Quillpick logo: a placeholder glyph, a letter Q whose tail is a quill" width="160" />
 
-# Rizzo Flow
+# Quillpick
 
 ### The open, local take on Jev: typed decisions from an LLM, without generating a single token
 
 **_Unstructured state in → typed, probabilistic decisions out. On your own machine._**
 
 <p>
+<a href="https://github.com/Axiumine/quillpick/actions/workflows/ci.yml"><img src="https://github.com/Axiumine/quillpick/actions/workflows/ci.yml/badge.svg" alt="CI status of Axiumine/quillpick" /></a>
 <img src="https://img.shields.io/badge/100%25-LOCAL-7c3aed?style=for-the-badge" alt="100% local" />
 <img src="https://img.shields.io/badge/0-GENERATED%20TOKENS-7c3aed?style=for-the-badge" alt="0 generated tokens" />
 <img src="https://img.shields.io/badge/JEV--COMPATIBLE-API-7c3aed?style=for-the-badge" alt="Jev-compatible API" />
@@ -23,31 +28,50 @@
 <img src="https://img.shields.io/badge/license-Apache--2.0-brightgreen" alt="Apache-2.0 license" />
 </p>
 
-<sub>🌐 <a href="https://rizzo-ai-academy.github.io/rizzo-flow/"><b>Website</b></a> · A project by <a href="https://www.rizzoaiacademy.com"><b>Rizzo AI Academy</b></a> · 🇮🇹 <a href="docs/README.it.md">Documentazione dettagliata in italiano</a></sub>
+<sub>Based on <a href="https://github.com/Rizzo-AI-Academy/rizzo-flow"><b>Rizzo Flow</b></a> by <a href="https://www.rizzoaiacademy.com"><b>Rizzo AI Academy</b></a> · <a href="FORK.md">About this fork</a> · 🇮🇹 <a href="docs/README.it.md">Documentazione dettagliata in italiano</a></sub>
 
 </div>
 
-**Rizzo Flow** is an open-source, local-first implementation of the idea behind
+**Quillpick** is an unofficial community fork of Rizzo Flow, an open-source, local-first implementation of the idea behind
 [**Jev**](https://typesafe.ai/blog/introducing-system-one-models-and-jev), TypeSafe's "System One"
 model: a *function call with judgment* that takes unstructured state and returns **typed decisions
 with probabilities** — a yes/no, a choice among options, a score on a rubric, a number — instead
 of text you then have to parse.
 
-Jev is a closed, hosted service. Rizzo Flow gives you the same programming model **on your own
+Jev is a closed, hosted service. Quillpick gives you the same programming model **on your own
 hardware, with open weights, and with the same HTTP interface**, so code written against the
 TypeSafe API can point at `localhost` by changing one URL. It runs on
 [llama.cpp](https://github.com/ggml-org/llama.cpp), so the hardware can be an Apple, NVIDIA, AMD
 or Intel GPU, or no GPU at all.
 
-> **Independent project.** Rizzo Flow is not affiliated with TypeSafe and does not reproduce Jev's
+> **Independent project.** Quillpick is not affiliated with TypeSafe and does not reproduce Jev's
 > proprietary architecture or its RLCD training. It reproduces the *interface pattern* with an
-> open model (Spark-X2.5, with our own [LoRA fine-tune](#fine-tuning) on public data), in the
+> open model (Spark-X2.5, with the upstream project's own [LoRA fine-tune](#fine-tuning) on public data), in the
 > spirit of [SemIf](https://github.com/TheoLeeCJ/SemIf), which inspired it. Probabilities are
 > **uncalibrated** unless you calibrate them on your own data, and
 > we make no claim of matching Jev or SemIf in quality. Every number below comes with its caveats.
 
-**New: fine-tuned weights.** Since 25 September 2026 the default model is Spark-X2.5 with our own
-LoRA fine-tune for typed decisions ([how and on what](#training-and-calibration)). On the
+> **About this fork.**
+>
+> - **What it is.** The code is upstream's `main` as of 25 September 2026 plus the bug fixes, CI and
+>   lint setup and test suite listed in [FORK.md](FORK.md). It runs the same weights and has not
+>   been re-measured: every number in this README was measured by upstream, on upstream's
+>   machines, with the caveats written next to it.
+> - **Whose voice.** The text below is inherited from upstream. Where it says "we", "our" or "the
+>   maintainers", it means the upstream project, not this fork. The rows named "Rizzo Flow 4B" and
+>   "Rizzo Flow 1.7B" in the result tables are the fine-tuned weights that Rizzo AI Academy
+>   published (`rizzoaiacademy/rizzo-flow*` on Hugging Face), not something this fork trained.
+> - **Names kept for compatibility.** The product is called Quillpick, but the Python package
+>   (`rizzo_flow`), the command (`rizzo`), the `RIZZO_*` environment variables, the served model ids
+>   (`rizzo-latest`, `rizzo-flow-*`, `rizzo-spark-*`) and the Hugging Face repositories
+>   (`rizzoaiacademy/*`) keep their upstream names, so that scripts, clients and the published
+>   weights keep working and changes can still be exchanged with upstream. A later release plans to
+>   rename the package, the command and the variables; until then nothing in your scripts needs to change.
+> - **Screenshots.** The Snake recording, the playground screenshot and the training curves are from
+>   the upstream project, taken before the fork; the first two show its name and mascot.
+
+**New: fine-tuned weights.** Since 25 September 2026 the default model is Spark-X2.5 with the upstream
+project's own LoRA fine-tune for typed decisions ([how and on what](#training-and-calibration)). On the
 [`typed-decisions`](https://huggingface.co/datasets/LocalLLaMA/typed-decisions) benchmark, same GPU,
 Q8_0:
 
@@ -61,9 +85,9 @@ Better answers (+7.4 points) and much better-shaped probabilities, still below J
 
 <div align="center">
 <br />
-<a href="assets/snake_run.gif"><img src="assets/snake_run.gif" alt="A game of Snake played by Rizzo Flow: on every move the bars show the probability of each direction, about 150 ms per decision" width="800" /></a>
+<a href="assets/snake_run.gif"><img src="assets/snake_run.gif" alt="A game of Snake played by Rizzo Flow, the upstream project, before the fork: on every move the bars show the probability of each direction, about 150 ms per decision" width="800" /></a>
 
-<sub>🐍 <b>Fast enough to play Snake</b> — every move is one <code>POST /v1/decisions</code>. Recorded at <b>real speed</b>, not sped up:
+<sub>🐍 <b>Fast enough to play Snake</b> (recording from the upstream project, before the fork) — every move is one <code>POST /v1/decisions</code>. Recorded at <b>real speed</b>, not sped up:
 140 moves in 25.6 s (≈ 5.5 per second), about <b>150 ms per decision</b> round trip, <b>0 generated tokens</b>.<br />
 Spark-X2.5-4B at 8 bit on an RTX 5060 Ti, recorded with the earlier MLX runtime (today's llama.cpp runtime is ~1.8× faster per decision) · one game, not a benchmark · <a href="#snake-demo">about the demo ↓</a> · <a href="#quickstart">run it yourself ↓</a></sub>
 </div>
@@ -76,9 +100,9 @@ You need Python ≥ 3.11.4, git and [uv](https://docs.astral.sh/uv/). The same f
 macOS, Windows and Linux; nothing is compiled and no GPU toolkit is installed.
 
 ```bash
-git clone https://github.com/Rizzo-AI-Academy/rizzo-flow && cd rizzo-flow
+git clone https://github.com/Axiumine/quillpick && cd quillpick
 uv sync --locked          # seconds: four small Python packages
-uv run rizzo download     # llama.cpp for this machine + Rizzo Flow 4B Q8_0 (~4.4 GB)
+uv run rizzo download     # llama.cpp for this machine + the Rizzo Flow 4B Q8_0 weights (~4.4 GB)
 uv run rizzo serve        # → http://127.0.0.1:8017/playground
 ```
 
@@ -115,10 +139,11 @@ the `uv run` prefix.
 
 <div align="center">
 <br />
-<a href="assets/playground.webp"><img src="assets/playground.webp" alt="The Rizzo Flow playground: an Italian support ticket as JSON state on the left with a choice and a score question; on the right the answers as probability bars, with timings and zero generated tokens" width="100%" /></a>
+<a href="assets/playground.webp"><img src="assets/playground.webp" alt="The playground of Rizzo Flow, the upstream project, before the fork: an Italian support ticket as JSON state on the left with a choice and a score question; on the right the answers as probability bars, with timings and zero generated tokens" width="100%" /></a>
 
-<sub>🦔 <b>The built-in playground</b> — one state, several questions answered in parallel, probability bars, timings and the
-equivalent cURL. Interface in Italian or English. (Screenshot taken with the earlier MLX runtime on an M4 Pro.)</sub>
+<sub><b>The built-in playground</b> — one state, several questions answered in parallel, probability bars, timings and the
+equivalent cURL. Interface in Italian or English. (Screenshot from the upstream project, before the fork, so it still shows
+the Rizzo Flow name and mascot; taken with the earlier MLX runtime on an M4 Pro.)</sub>
 </div>
 
 ### Which hardware, and what we have actually run
@@ -128,9 +153,9 @@ sha256. `rizzo devices` shows what the runtime sees and what `--device auto` wil
 
 | Your machine | Build picked (`--runtime auto`) | Status |
 | --- | --- | --- |
-| Windows or Linux, NVIDIA GPU | `cuda` — CUDA 13 libraries included; needs a recent driver, no toolkit | **tested on Windows 10 + RTX 5060 Ti**: every current number in this README. Linux not tried |
-| Windows or Linux, AMD or Intel GPU | `vulkan` — uses the GPU driver you already have | Community reports cover an AMD Radeon 780M and Intel Iris Xe; see [#11](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/11) and [#7](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/7). The Intel run used Q4_K_M; these reports have not been independently reproduced by the maintainers. |
-| Mac, Apple Silicon | `metal` | A community report covers an M3 Pro; see [#5](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/5). The run has not been independently reproduced by the maintainers. The two fixes it needed (context freed before exit, a warning when an x86_64 Python under Rosetta hides the GPU) are merged ([#4](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/4)), and so is `--device metal` on M4 ([#9](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/9)). |
+| Windows or Linux, NVIDIA GPU | `cuda` — CUDA 13 libraries included; needs a recent driver, no toolkit | **tested by upstream on Windows 10 + RTX 5060 Ti**: every current number in this README. Linux not tried upstream |
+| Windows or Linux, AMD or Intel GPU | `vulkan` — uses the GPU driver you already have | Community reports cover an AMD Radeon 780M and Intel Iris Xe; see [#11](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/11) and [#7](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/7). The Intel run used Q4_K_M; these reports have not been independently reproduced by the upstream maintainers. |
+| Mac, Apple Silicon | `metal` | A community report covers an M3 Pro; see [#5](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/5). The run has not been independently reproduced by the upstream maintainers. The two fixes it needed (context freed before exit, a warning when an x86_64 Python under Rosetta hides the GPU) are merged ([#4](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/4)), and so is `--device metal` on M4 ([#9](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/9)). |
 | No GPU | `vulkan` falls back to the CPU; or `--runtime cpu` | CPU mode was reported on an Intel laptop with an iGPU ([#7](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/7)); a GPU-free host has not been tested. |
 
 Other builds on request: `uv run rizzo download --only runtime --runtime rocm` (AMD, ROCm/HIP),
@@ -142,8 +167,8 @@ that header.
 
 Everything is pinned: llama.cpp release
 [`b11081`](https://github.com/ggml-org/llama.cpp/releases/tag/b11081) from its official GitHub
-releases, and the GGUF files, by commit and sha256. By default `rizzo download` fetches **our
-fine-tuned weights** ([4B](https://huggingface.co/rizzoaiacademy/rizzo-flow),
+releases, and the GGUF files, by commit and sha256. By default `rizzo download` fetches **the upstream
+project's fine-tuned weights** ([4B](https://huggingface.co/rizzoaiacademy/rizzo-flow),
 [1.7B](https://huggingface.co/rizzoaiacademy/rizzo-flow-1.7b): Spark-X2.5 with a LoRA trained for
 typed decisions and merged in, see [Fine-tuning](#fine-tuning)). `--weights base` fetches the
 original files published by the model's authors instead
@@ -153,12 +178,12 @@ the weights to `models/`, both git-ignored.
 
 ### Models and options
 
-| `--size` | `--weights flow` (default): our fine-tune | `--weights base`: original Spark-X2.5 | Status |
+| `--size` | `--weights flow` (default): the upstream fine-tune | `--weights base`: original Spark-X2.5 | Status |
 | --- | --- | --- | --- |
 | `4b` (default) | `q8_0` 4.4 GB (default) · `q4_k_m` 2.6 GB · `bf16` 8.2 GB | `q8_0` 4.4 GB · `q4_k_m` 2.6 GB · `bf16` 8.2 GB | recommended |
 | `1.7b` | `q8_0` 1.8 GB (default) · `q4_k_m` 1.1 GB · `bf16` 3.4 GB | `q8_0` 1.8 GB · `q4_k_m` 1.1 GB · `bf16` 3.4 GB | ~2× faster, **much less accurate**. The base 1.7B picks "cannot determine" almost every time when abstention is enabled: use it with `"allow_abstain": false` (the Jev-compatible endpoint always does) and check it on your own data |
 
-The fine-tuned Q4_K_M files are ours (`llama-quantize` b11081 from the BF16 GGUF, no importance
+The fine-tuned Q4_K_M files are upstream's own (`llama-quantize` b11081 from the BF16 GGUF, no importance
 matrix): on typed-decisions the 4B one ties Q8_0, the 1.7B one loses 5 points (see
 [Fine-tuning](#fine-tuning)). The served model
 ID says which weights answer: `rizzo-flow-4b-q8_0` for the fine-tune, `rizzo-spark-x2.5-4b-q8_0`
@@ -224,7 +249,7 @@ even when it is wrong, and the fine-tune learns to spread probability when the e
 
 <a href="assets/training_charts.png"><img src="assets/training_charts.png" alt="Training curves on the dev set (600 held-out validation questions, evaluated every 200 steps): accuracy per source (tasksource, Open-Jev, jev-bench), overall accuracy and loss for the 4B (red) and the 1.7B (green); overall accuracy goes from 0.55 to about 0.85 on the 4B and from 0.41 to about 0.82 on the 1.7B" width="100%" /></a>
 
-*Dev curves from Weights & Biases: red = 4B, green = 1.7B (the blue dot is a 10-step smoke run).
+*Upstream's training run. Dev curves from Weights & Biases: red = 4B, green = 1.7B (the blue dot is a 10-step smoke run).
 600 questions from the `validation` splits of the three sources, never trained on, evaluated at
 step 0 and every 200 steps; accuracy = argmax against the argmax of the target distribution.
 These are in-distribution numbers: the benchmark below is the independent measurement.*
@@ -310,7 +335,7 @@ hope is valid JSON. But for a decision you do not need text — you need **which
 sure**. That information is already in the model after a single forward pass: it is the
 probability it assigns to each possible answer.
 
-Rizzo Flow reads exactly that and nothing else:
+Quillpick reads exactly that and nothing else:
 
 ```mermaid
 flowchart LR
@@ -422,7 +447,7 @@ A real response (Q8_0, values rounded, `x_rizzo` omitted) — 83 ms in total for
 }
 ```
 
-A client written for the hosted API can target Rizzo Flow by changing only the base URL (for the
+A client written for the hosted API can target Quillpick by changing only the base URL (for the
 official SDKs: `TYPESAFE_BASE_URL=http://127.0.0.1:8017` — designed for it, not yet tested with
 the real SDK). **The interface is compatible, the model is not Jev:**
 
@@ -457,7 +482,7 @@ payment term is longer than 30 days, it said no with p = 0.75. Probabilities are
 
 ## A model with a native 1M-token context
 
-Rizzo Flow runs [**XHToken/Spark-X2.5-4B**](https://huggingface.co/XHToken/Spark-X2.5-4B) by
+Quillpick runs [**XHToken/Spark-X2.5-4B**](https://huggingface.co/XHToken/Spark-X2.5-4B) by
 default, or the smaller [**Spark-X2.5-1.7B**](https://huggingface.co/XHToken/Spark-X2.5-1.7B)
 (both Apache-2.0). The model handles up to **1M tokens** (1,048,576, native). Out of the box a
 question (state + question) is limited to **8,192 tokens**; raise it with `--ctx`. The KV cache
@@ -465,7 +490,7 @@ is reserved at start-up and costs ~144 KiB per token on the 4B: about 1.4 GiB at
 4.8 GiB at 32k. Beyond ~60k tokens also raise the 256 KB `state` cap in `schema.py`. Our committed
 measurements stop at states of ~2,000 tokens. Oversized inputs are rejected, never truncated.
 
-| Input context | Rizzo Flow | Jev (TypeSafe) | SemIf |
+| Input context | Quillpick | Jev (TypeSafe) | SemIf |
 | --- | ---: | ---: | ---: |
 | Model maximum | **1M tokens** (native) | 32k for state + longest question · 64k per request | 262k native (Qwen3.5-4B; ~1M with YaRN) |
 | Default limit | 8,192 (`--ctx`) | — | 4,096 (`--max-tokens`) |
@@ -594,7 +619,7 @@ Reading this honestly:
 
 ### Before llama.cpp: the MLX runtime, for the record
 
-Until 21 September 2026 Rizzo Flow ran on MLX only. These are the numbers published then, with the
+Until 21 September 2026 the project (then upstream's Rizzo Flow) ran on MLX only. These are the numbers published then, with the
 same fixtures and metric; MLX is still available as `--backend mlx`.
 
 | Measure (Spark-X2.5-4B, MLX) | M4 Pro · Q8 · prompt v2 | RTX 5060 Ti · Q8 · prompt v3 | RTX 5060 Ti · BF16 · prompt v3 |
@@ -648,8 +673,8 @@ did not change with the runtime: llama.cpp receives byte-identical prompts and t
   evidence is missing (6 of 36 cases, against SemIf's 1).
 - Residual position bias; permutation debiasing is not implemented.
 - 26 options per question (Jev: 255; SemIf: 16). Beyond that you need two stages.
-- **Tested by us on one machine.** Only Windows + NVIDIA (CUDA and Vulkan builds) has been run
-  by us. Community reports cover macOS/Metal (M3 Pro), AMD and Intel iGPUs with Vulkan on Linux
+- **Tested by upstream on one machine.** Only Windows + NVIDIA (CUDA and Vulkan builds) has been run
+  by the upstream project; this fork has run only the test suite, not the real weights. Community reports cover macOS/Metal (M3 Pro), AMD and Intel iGPUs with Vulkan on Linux
   and Windows, and CPU-only on an Intel laptop (see the hardware table); ROCm, SYCL and a
   GPU-free machine are untested.
 - llama.cpp is driven through ctypes bindings tied to one pinned release (`b11081`): a build of
@@ -707,8 +732,11 @@ Architecture notes and the current state of the work: [CLAUDE.md](CLAUDE.md) (It
 
 ## Contributors
 
-- [**Simone Rizzo**](https://github.com/simone-rizzo) — author and maintainer.
-- [**BiG86**](https://github.com/BiG86) — the reason Rizzo Flow runs on llama.cpp. Their
+People who contributed to the upstream project, whose work this fork inherits. The contributors of this
+fork, and who else is credited, are in [FORK.md](FORK.md#credits).
+
+- [**Simone Rizzo**](https://github.com/simone-rizzo) — author of Rizzo Flow, the upstream project.
+- [**BiG86**](https://github.com/BiG86) — the reason the project runs on llama.cpp. Their
   [pull request #1](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/1) was the first to run
   the project outside MLX, on an AMD GPU through llama.cpp, with a pinned and verified toolchain
   and honest measurements. It convinced us to make llama.cpp the default runtime for every
@@ -751,21 +779,25 @@ Architecture notes and the current state of the work: [CLAUDE.md](CLAUDE.md) (It
 
 Want to be next? The most useful next reports are from Linux, other AMD or Intel GPUs,
 different Apple Silicon models, ROCm/SYCL builds, or a dedicated CPU-only machine. Please
-[open an issue](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues) with the output of
+[open an issue](https://github.com/Axiumine/quillpick/issues) with the output of
 `rizzo devices` and your timings.
 
 ## License
 
 Released under the **[Apache License 2.0](LICENSE)** © 2026 Simone Rizzo — Rizzo AI Academy — the
-same license as the Spark-X2.5 models it runs. Third-party attributions are in [NOTICE](NOTICE);
+same license as the Spark-X2.5 models it runs. Quillpick is a modified version of that work: the
+changes are in the git history and summarized in [FORK.md](FORK.md), and [NOTICE](NOTICE) says so, as
+Apache-2.0 section 4 asks. Third-party attributions are in [NOTICE](NOTICE);
 model weights and the runtimes are downloaded from their sources and keep their own licenses.
+The name Quillpick and its logo are not upstream's, and the license grants no right to use the
+name Rizzo Flow, the Rizzo AI Academy name or the upstream mascot (Apache-2.0 section 6).
 
 ---
 
 <div align="center">
 
-**Author** — Simone Rizzo · **A project by** [Rizzo AI Academy](https://www.rizzoaiacademy.com)
+**Original author** — Simone Rizzo · **Upstream project by** [Rizzo AI Academy](https://www.rizzoaiacademy.com)
 
-→ [www.rizzoaiacademy.com](https://www.rizzoaiacademy.com)
+**This fork** — the Quillpick contributors, unofficial and independent of upstream · [FORK.md](FORK.md)
 
 </div>

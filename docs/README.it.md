@@ -1,10 +1,16 @@
-# Rizzo Flow
+> **Quillpick è un fork non ufficiale della community di [Rizzo Flow](https://github.com/Rizzo-AI-Academy/rizzo-flow) di Simone Rizzo / Rizzo AI Academy (Apache-2.0). Non è affiliato, approvato né mantenuto dagli autori originali.**
+>
+> [Repository originale](https://github.com/Rizzo-AI-Academy/rizzo-flow) · [Issue #29 del repository originale](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/29) · [FORK.md: perché esiste questo fork e cosa cambia](../FORK.md)
+
+<img src="../assets/quillpick_logo.png" alt="Logo di Quillpick: un segnaposto, una lettera Q con la coda a forma di penna" width="96" />
+
+# Quillpick
 
 Decisioni tipizzate e stime numeriche locali con **XHToken/Spark-X2.5-4B**.
 Il modello valuta le opzioni; il software restituisce JSON verificabile senza generare token.
 
-Implementazione indipendente ispirata al pattern di Jev e SemIf. Usa Spark con un nostro
-fine-tuning LoRA per le decisioni tipizzate (sezione [Fine-tuning](#fine-tuning); i pesi originali
+Implementazione indipendente ispirata al pattern di Jev e SemIf. Usa Spark con il
+fine-tuning LoRA del progetto originale per le decisioni tipizzate (sezione [Fine-tuning](#fine-tuning); i pesi originali
 restano a un flag di distanza, `--weights base`): non è un modello addestrato da zero, non replica
 l'architettura proprietaria di Jev e non presume di avere probabilità calibrate o qualità superiore
 a SemIf.
@@ -15,7 +21,20 @@ del progetto, resta disponibile con `--backend mlx`. Verificato con i pesi reali
 RTX 5060 Ti (build CUDA e build Vulkan): 65 test superati, API funzionante, smoke Q8_0 0.95 con
 66 ms di mediana. Segnalazioni pubbliche descrivono anche prove su Mac M3 Pro/Metal, Radeon 780M e
 Intel Iris Xe/Vulkan, oltre alla modalità CPU su un portatile Intel; non sono state riprodotte dai
-manutentori ([#5](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/5), [#7](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/7), [#11](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/11)). Risultati, errori e limiti sono in [results/README.md](../results/README.md).
+manutentori originali ([#5](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/5), [#7](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/7), [#11](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/11)). Risultati, errori e limiti sono in [results/README.md](../results/README.md).
+
+**Su questo fork.** Il codice è il `main` del progetto originale al 25 settembre 2026 più le correzioni,
+la CI con i controlli di stile e la suite di test elencate in [FORK.md](../FORK.md). Il testo che segue è
+ereditato dal progetto originale: dove dice «noi», «nostro» o «i manutentori» intende il progetto
+originale, non questo fork, e ogni misura è stata fatta dal progetto originale sulle sue macchine, con i
+limiti scritti accanto; questo fork non ha rifatto nessuna misura. Le righe «Rizzo Flow 4B» e «Rizzo Flow
+1.7B» delle tabelle sono i pesi fine-tuned pubblicati da Rizzo AI Academy (`rizzoaiacademy/rizzo-flow*`
+su Hugging Face), non addestrati da questo fork. Per compatibilità col progetto originale e con i pesi
+pubblicati restano invariati il pacchetto Python (`rizzo_flow`), il comando `rizzo`, le variabili
+`RIZZO_*`, gli ID dei modelli serviti (`rizzo-latest`, `rizzo-flow-*`, `rizzo-spark-*`) e i repository
+Hugging Face `rizzoaiacademy/*`; una versione successiva prevede di rinominarli, e fino ad allora nei
+vostri script non cambia nulla. Le immagini (le curve di training; nel README inglese anche il gif di Snake
+e lo screenshot del playground) sono del progetto originale, precedenti al fork.
 
 ## Avvio
 
@@ -25,7 +44,7 @@ Gli stessi comandi su ogni sistema:
 uv sync --locked
 source .venv/bin/activate         # macOS / Linux
 .venv\Scripts\activate           # Windows
-rizzo download                    # runtime llama.cpp per questa macchina + Rizzo Flow 4B Q8_0 (~4.4 GB)
+rizzo download                    # runtime llama.cpp per questa macchina + i pesi Rizzo Flow 4B Q8_0 (~4.4 GB)
 rizzo devices                     # GPU viste dal runtime e quella scelta da `auto`
 rizzo decide examples/ticket.json
 rizzo decide examples/numeric.json
@@ -42,10 +61,10 @@ essere dello stesso commit (`161755f`) perché i binding ctypes ricalcano quell'
 **Cosa è stato provato dal progetto:** Windows 10 + RTX 5060 Ti, build CUDA e build Vulkan sulla
 stessa scheda (stesse risposte: 3 argmax diversi su 252). Segnalazioni pubbliche riportano un run
 Mac M3 Pro/Metal, AMD Radeon 780M/Vulkan, Intel Iris Xe/Vulkan e una prova in modalità CPU su un
-portatile Intel; sono riferite nei link sopra ma non riprodotte dai manutentori. Linux, ROCm, SYCL
+portatile Intel; sono riferite nei link sopra ma non riprodotte dai manutentori originali. Linux, ROCm, SYCL
 e una macchina senza GPU dedicata restano da verificare.
 
-I pesi predefiniti (`--weights flow`) sono il nostro fine-tuning, fuso nei pesi e convertito in
+I pesi predefiniti (`--weights flow`) sono il fine-tuning del progetto originale, fuso nei pesi e convertito in
 GGUF ([4B](https://huggingface.co/rizzoaiacademy/rizzo-flow),
 [1.7B](https://huggingface.co/rizzoaiacademy/rizzo-flow-1.7b)): `--quant q8_0` (default, 4.4 GB),
 `q4_k_m` (2.6 GB; sull'1.7B perde 5 punti) o `bf16` (8.2 GB). `--weights base` scarica invece i GGUF originali degli autori del modello
@@ -388,3 +407,8 @@ trasferimento tra domini o rubriche. Valutare anche il costo degli errori e dell
 Il runtime usa la propria implementazione Spark: non carica codice Python arbitrario dalla
 directory dei pesi e non sostituisce Spark con Qwen. Modello e runtime conservano le loro licenze Apache-2.0.
 Il codice applicativo di questo progetto è originale; non sono stati copiati file di SemIf.
+
+Quillpick è una versione modificata di Rizzo Flow (Apache-2.0, © 2026 Simone Rizzo — Rizzo AI Academy): le
+modifiche sono nella cronologia git e riassunte in [FORK.md](../FORK.md); [NOTICE](../NOTICE) conserva le
+attribuzioni originali. Il nome Quillpick e il suo logo non appartengono al progetto originale, e la
+licenza non concede diritti sul nome Rizzo Flow, su quello di Rizzo AI Academy né sulla sua mascotte.

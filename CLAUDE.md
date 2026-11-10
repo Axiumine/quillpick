@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Cos'è
 
-Rizzo Flow: versione locale del pattern di **Jev** (TypeSafe, "System One": state non strutturato →
+Quillpick (fork non ufficiale della community di Rizzo Flow, vedi `FORK.md`; il pacchetto `rizzo_flow`, il
+comando `rizzo`, le variabili `RIZZO_*` e gli ID `rizzo-*` restano quelli del progetto originale): versione
+locale del pattern di **Jev** (TypeSafe, "System One": state non strutturato →
 decisioni tipizzate con probabilità, zero generazione di testo), ispirata a **SemIf**
 (`~/Git-projects/SemIf`, commit `ca3ba65`). Nessun training: si leggono i logit delle sole lettere
 di risposta in un forward pass. Modello: **XHToken/Spark-X2.5-4B** (architettura `spark2_5`, rev.
@@ -24,8 +26,10 @@ tutti i numeri fino al 21 settembre e l'unico provato sul Mac (M4 Pro 24 GiB).
 (`config.identify`) e l'ID servito diventa `rizzo-spark-x2.5-1.7b-q8_0` (con MLX: `…-q8`). Il 1.7B è stato provato solo su Windows/CUDA (sezione in fondo): funziona ma è molto meno accurato.
 
 README, doc e messaggi all'utente sono in italiano; codice, commenti e docstring in inglese.
-Repository pubblico: <https://github.com/Rizzo-AI-Academy/rizzo-flow> (remote `origin` via SSH, branch `main`;
-il README pubblico è in inglese, quello italiano storico è in `docs/README.it.md`).
+Repository del fork: <https://github.com/Axiumine/quillpick>; progetto originale (upstream):
+<https://github.com/Rizzo-AI-Academy/rizzo-flow>. Il testo di questo file è in gran parte ereditato dal progetto
+originale: «noi» e «nostro» intendono lui. Il README pubblico è in inglese, quello italiano storico è in
+`docs/README.it.md`.
 
 ## Comandi
 
@@ -228,17 +232,18 @@ inferenza: liberarne il contesto sotto di lui sarebbe un use after free).
 ### Sito del progetto (GitHub Pages)
 
 `docs/index.html` è la landing page statica, **nello stile del sito di rizzo-pii** (chiaro, centrato,
-poco testo: hero con mascotte, badge, stats, card brevi, tabella di confronto, footer scuro), senza
+poco testo: banner del fork, hero con il logo di Quillpick (un segnaposto, non la mascotte del progetto
+originale), badge, stats, card brevi, tabella di confronto, footer scuro), senza
 dipendenze esterne, bilingue con `<span class="it">`/`<span class="en">` e `body.lang-it|en`.
-La sezione `#demo` è un'animazione interattiva (state → riccio → bool/classe/score): usa risposte
+La sezione `#demo` è un'animazione interattiva (state → logo → bool/classe/score): usa risposte
 e tempi **reali** (oggetto `DEMO` inline; ri-registrato il 22 settembre 2026 con
 `scripts/record_demo.py`: 4B Q8_0 su llama.cpp/CUDA, prompt v3, RTX 5060 Ti, via
 `compat.to_native`/`from_native` in-process, una domanda per richiesta, mediana di 5 chiamate a
 caldo: ~44 ms a decisione; nessuna risposta scelta a mano — p.es. seniority del CV: IT "Intermedio"
 0.70, EN "Senior" 0.997) e la fase "pensa" dura davvero quei millisecondi. Se cambiano modello o prompt, rigenerare quei dati. Pages serve **solo**
 `docs/`: gli asset del sito stanno in `docs/assets/` (copie di `assets/`), `docs/.nojekyll` disattiva
-Jekyll. URL: <https://rizzo-ai-academy.github.io/rizzo-flow/> (Settings → Pages → branch `main`,
-cartella `/docs`). Anteprima locale: server `site` in `.claude/launch.json` (porta 8020). I numeri
+Jekyll. Pages del fork: da attivare (Settings → Pages → branch `main`, cartella `/docs`); il sito del
+progetto originale è <https://rizzo-ai-academy.github.io/rizzo-flow/>, che mostra ancora la mascotte. Anteprima locale: server `site` in `.claude/launch.json` (porta 8020). I numeri
 sulla pagina vanno tenuti allineati a README e `results/`.
 
 ## Regole del progetto

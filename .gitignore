@@ -218,7 +218,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Rizzo Flow
+# Quillpick (unofficial fork of Rizzo Flow)
 models/
 runtimes/
 .research/

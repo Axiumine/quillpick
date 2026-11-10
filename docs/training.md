@@ -29,7 +29,7 @@ Guida completa per rifare da zero, su qualunque macchina con GPU NVIDIA, il fine
 
 ## 1. Idea: cosa si addestra
 
-Rizzo Flow non genera testo. Per ogni domanda il modello legge un prompt (system prompt,
+Quillpick non genera testo. Per ogni domanda il modello legge un prompt (system prompt,
 `<evidence>` con lo state, domanda a scelta multipla con opzioni `A.`, `B.`, …), fa **un solo
 forward pass** e all'ultima posizione si leggono i logit delle sole lettere ammesse: la softmax su
 quei logit è la risposta.
@@ -385,7 +385,7 @@ La conversione usa `convert_hf_to_gguf.py` di llama.cpp allo stesso commit dei b
 
 **Verifica della pipeline (25/09).** `export_gguf.py --base` (7 minuti su RTX 5060 Ti) produce
 GGUF BF16 e Q8_0 con **tutti i 290 tensori identici bit per bit** a quelli ufficiali di XHToken;
-differiscono solo i metadati `general.name` e `general.sampling.penalty_repeat`, che Rizzo Flow
+differiscono solo i metadati `general.name` e `general.sampling.penalty_repeat`, che Quillpick
 non usa. Il chat template (da cui il backend costruisce i prompt) è quello di
 `chat_template.jinja`, come nel GGUF ufficiale: lo script toglie la copia compattata da
 `tokenizer_config.json`, che il convertitore preferirebbe. Le due versioni del template

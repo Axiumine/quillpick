@@ -1,3 +1,12 @@
+Quillpick
+This is Quillpick, an unofficial community fork of Rizzo Flow, a modified version of the work
+below (Apache License 2.0, section 4(b)): it has been changed by the Quillpick contributors. The
+changes are recorded in the git history of this repository and summarized in FORK.md. Quillpick is
+not affiliated with, endorsed or maintained by the authors of Rizzo Flow. The original notice
+follows, unchanged.
+
+--------------------------------------------------------------------------------------------
+
 Rizzo Flow
 Copyright 2026 Simone Rizzo — Rizzo AI Academy (https://www.rizzoaiacademy.com)
 
