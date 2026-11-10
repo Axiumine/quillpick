@@ -213,7 +213,7 @@
     </div>
 
     <div class="stats">
-      <div class="stat"><b>~50 ms</b><span class="it">per decisione · 8 bit, RTX 5060 Ti</span><span class="en">per decision · 8 bit, RTX 5060 Ti</span></div>
+      <div class="stat"><b>~50 ms</b><span class="it">per decisione · 8 bit, RTX 5060 Ti (misura del progetto originale)</span><span class="en">per decision · 8 bit, RTX 5060 Ti (measured by the upstream project)</span></div>
       <div class="stat"><b>4B · 1.7B</b><span class="it">parametri</span><span class="en">parameters</span></div>
       <div class="stat"><b>1M</b><span class="it">token di contesto nativo</span><span class="en">tokens of native context</span></div>
       <div class="stat"><b>~5 GB</b><span>RAM · 8 bit</span></div>
@@ -280,8 +280,8 @@
         </button>
       </div>
       <p class="small">
-        <span class="it">Risposte e tempi <b>reali</b>, registrati da Spark-X2.5-4B Q8_0 con llama.cpp su una RTX 5060 Ti (mediana di 5 chiamate a caldo, prompt v3). Nessuna risposta è stata scelta o corretta a mano. Il viaggio dei dati è rallentato per farsi vedere; il logo "pensa" davvero per quei millisecondi.</span>
-        <span class="en"><b>Real</b> answers and timings, recorded from Spark-X2.5-4B Q8_0 with llama.cpp on an RTX 5060 Ti (median of 5 warm calls, prompt v3). No answer was picked or fixed by hand. The data's journey is slowed down so you can see it; the logo really "thinks" for that many milliseconds.</span>
+        <span class="it">Risposte e tempi <b>reali</b>, registrati dal progetto originale (non da questo fork) con Spark-X2.5-4B Q8_0 con llama.cpp su una RTX 5060 Ti (mediana di 5 chiamate a caldo, prompt v3). Nessuna risposta è stata scelta o corretta a mano. Il viaggio dei dati è rallentato per farsi vedere; il logo "pensa" davvero per quei millisecondi.</span>
+        <span class="en"><b>Real</b> answers and timings, recorded by the upstream project (not by this fork) from Spark-X2.5-4B Q8_0 with llama.cpp on an RTX 5060 Ti (median of 5 warm calls, prompt v3). No answer was picked or fixed by hand. The data's journey is slowed down so you can see it; the logo really "thinks" for that many milliseconds.</span>
       </p>
     </div>
   </div>
@@ -297,8 +297,8 @@
     </p>
     <a class="shot" href="assets/snake_run.gif" style="max-width:800px;margin-left:auto;margin-right:auto"><img src="assets/snake_run.gif" width="800" height="480" loading="lazy" alt="Una partita a Snake giocata da Rizzo Flow, il progetto originale, prima del fork: a ogni mossa le barre mostrano la probabilità di ogni direzione, circa 150 ms a decisione" /></a>
     <p class="small" style="text-align:center;margin-top:12px">
-      <span class="it">Registrazione a <b>velocità reale</b>, non accelerata: 140 mosse in 25,6 s (≈ 5,5 al secondo), circa 150 ms a decisione andata e ritorno. Spark-X2.5-4B a 8 bit su una RTX 5060 Ti, registrata con il precedente runtime MLX (con llama.cpp ogni decisione è ~1,8× più veloce). È una sola partita, non un benchmark; la demo è inclusa nel backend su <code>/snake</code>.</span>
-      <span class="en">Recorded at <b>real speed</b>, not sped up: 140 moves in 25.6 s (≈ 5.5 per second), about 150 ms per decision round trip. Spark-X2.5-4B at 8 bit on an RTX 5060 Ti, recorded with the earlier MLX runtime (llama.cpp is ~1.8× faster per decision). One game, not a benchmark; the demo ships with the backend at <code>/snake</code>.</span>
+      <span class="it"><b>Registrazione del progetto originale (Rizzo Flow), prima del fork: mostra ancora il nome e la mascotte originali.</b> Registrazione a <b>velocità reale</b>, non accelerata: 140 mosse in 25,6 s (≈ 5,5 al secondo), circa 150 ms a decisione andata e ritorno. Spark-X2.5-4B a 8 bit su una RTX 5060 Ti, registrata con il precedente runtime MLX (con llama.cpp ogni decisione è ~1,8× più veloce). È una sola partita, non un benchmark; la demo è inclusa nel backend su <code>/snake</code>.</span>
+      <span class="en"><b>Recording from the upstream project (Rizzo Flow), before the fork; it still shows the upstream name and mascot.</b> Recorded at <b>real speed</b>, not sped up: 140 moves in 25.6 s (≈ 5.5 per second), about 150 ms per decision round trip. Spark-X2.5-4B at 8 bit on an RTX 5060 Ti, recorded with the earlier MLX runtime (llama.cpp is ~1.8× faster per decision). One game, not a benchmark; the demo ships with the backend at <code>/snake</code>.</span>
     </p>
   </div>
 </section>
@@ -371,16 +371,16 @@
     <p class="sub"><span class="it">Per classificare, instradare, dare un punteggio, verificare. Dentro il tuo codice.</span><span class="en">To classify, route, score, verify. Inside your code.</span></p>
     <div class="feat-grid">
       <div class="feat"><div class="ic">🔒</div><h3><span class="it">Tutto in locale</span><span class="en">Fully local</span></h3><p><span class="it">Pesi open sul tuo Mac o sulla tua GPU NVIDIA. Nessun dato esce, nessuna chiave API.</span><span class="en">Open weights on your Mac or your NVIDIA GPU. No data leaves, no API key.</span></p></div>
-      <div class="feat"><div class="ic">⚡</div><h3><span class="it">Zero token generati</span><span class="en">Zero generated tokens</span></h3><p><span class="it">Un passaggio, nessun ciclo di generazione: circa 50 ms a decisione su una RTX 5060 Ti a 8 bit.</span><span class="en">One pass, no decoding loop: about 50 ms per decision on an RTX 5060 Ti at 8 bit.</span></p></div>
+      <div class="feat"><div class="ic">⚡</div><h3><span class="it">Zero token generati</span><span class="en">Zero generated tokens</span></h3><p><span class="it">Un passaggio, nessun ciclo di generazione: circa 50 ms a decisione su una RTX 5060 Ti a 8 bit (misura del progetto originale).</span><span class="en">One pass, no decoding loop: about 50 ms per decision on an RTX 5060 Ti at 8 bit (measured by the upstream project).</span></p></div>
       <div class="feat"><div class="ic">🧮</div><h3><span class="it">Quattro primitive</span><span class="en">Four primitives</span></h3><p><span class="it"><code>boolean</code>, <code>choice</code>, <code>score</code>, <code>numeric</code>. Fino a 26 opzioni per domanda.</span><span class="en"><code>boolean</code>, <code>choice</code>, <code>score</code>, <code>numeric</code>. Up to 26 options per question.</span></p></div>
-      <div class="feat"><div class="ic">🧵</div><h3><span class="it">Tante domande, un solo state</span><span class="en">Many questions, one state</span></h3><p><span class="it">21 domande su uno state da ~2.000 token: 1,0 s con il prefill condiviso, 8,1 s senza (RTX 5060 Ti, 8 bit).</span><span class="en">21 questions on a ~2,000-token state: 1.0 s with the shared prefill, 8.1 s without (RTX 5060 Ti, 8 bit).</span></p></div>
+      <div class="feat"><div class="ic">🧵</div><h3><span class="it">Tante domande, un solo state</span><span class="en">Many questions, one state</span></h3><p><span class="it">21 domande su uno state da ~2.000 token: 1,0 s con il prefill condiviso, 8,1 s senza (RTX 5060 Ti, 8 bit; misura del progetto originale).</span><span class="en">21 questions on a ~2,000-token state: 1.0 s with the shared prefill, 8.1 s without (RTX 5060 Ti, 8 bit; measured by the upstream project).</span></p></div>
       <div class="feat"><div class="ic">🤷</div><h3><span class="it">Sa dire "non lo so"</span><span class="en">It can say "I don't know"</span></h3><p><span class="it">Astensione e fuori scala integrati: il valore diventa <code>null</code>, con uno status.</span><span class="en">Built-in abstention and out-of-range: the value becomes <code>null</code>, with a status.</span></p></div>
       <div class="feat"><div class="ic">📚</div><h3><span class="it">Contesto da 1M</span><span class="en">1M context</span></h3><p><span class="it">Attenzione ibrida: ~36 KiB di cache per token. Il limite lo scegli tu con <code>--ctx</code>.</span><span class="en">Hybrid attention: ~36 KiB of cache per token. You pick the limit with <code>--ctx</code>.</span></p></div>
     </div>
     <a class="shot" href="assets/playground.webp"><img src="assets/playground.webp" width="2998" height="1660" loading="lazy" alt="Il playground di Rizzo Flow, il progetto originale, prima del fork: state e domande a sinistra, risposte con barre di probabilità e tempi a destra" /></a>
     <p class="small" style="text-align:center;margin-top:12px">
-      <span class="it">Il playground incluso nel backend, in italiano e in inglese.</span>
-      <span class="en">The playground that ships with the backend, in Italian and English.</span>
+      <span class="it">Il playground incluso nel backend, in italiano e in inglese. <b>Schermata del progetto originale (Rizzo Flow), prima del fork: mostra ancora il nome e la mascotte originali.</b></span>
+      <span class="en">The playground that ships with the backend, in Italian and English. <b>Screenshot from the upstream project (Rizzo Flow), before the fork; it still shows the upstream name and mascot.</b></span>
     </p>
   </div>
 </section>
@@ -388,8 +388,8 @@
 <!-- COMPARISON -->
 <section>
   <div class="wrap">
-    <h2><span class="it">Come si confronta</span><span class="en">How it compares</span></h2>
-    <p class="sub"><span class="it">Senza sconti: dove siamo avanti e dove no.</span><span class="en">No sugar-coating: where we lead and where we don't.</span></p>
+    <h2><span class="it">Affiancati</span><span class="en">Side by side</span></h2>
+    <p class="sub"><span class="it">Funzioni e numeri, con le avvertenze scritte sotto la tabella.</span><span class="en">Features and numbers, with the caveats written under the table.</span></p>
     <div class="cmp">
       <table>
         <tr><th></th><th class="hl">Quillpick</th><th>Jev (TypeSafe)</th><th>SemIf</th></tr>
@@ -404,7 +404,11 @@
         <tr><td><span class="it">Qualità su <code>perturbations108</code></span><span class="en">Quality on <code>perturbations108</code></span></td><td class="hl">0.946</td><td>—</td><td>0.766</td></tr>
       </table>
     </div>
-    <p class="small" style="text-align:center;margin-top:14px">
+    <p class="small" style="text-align:center;max-width:720px;margin:14px auto 0">
+      <span class="it"><b>I numeri sono stati misurati dal progetto originale, sui propri pesi fine-tuned e sulla propria macchina; questo fork non ha rieseguito nessuna misura.</b> Quelli di SemIf sono i suoi numeri pubblicati. Su <code>authored144</code> la differenza con SemIf è un pareggio (+0,027 [−0,038, +0,099]); su <code>perturbations108</code> è +0,180 [+0,108, +0,267]; sull'evidenza mancante i pesi fine-tuned peggiorano (0,583 contro 0,750 dei pesi base). Le probabilità non sono calibrate. Intervalli e limiti nel <a href="https://github.com/Axiumine/quillpick#results-so-far">README</a>.</span>
+      <span class="en"><b>Numbers measured by the upstream project on its own fine-tuned weights and machine; this fork has not re-run any measurement.</b> SemIf's are its published numbers. On <code>authored144</code> the difference from SemIf is a tie (+0.027 [−0.038, +0.099]); on <code>perturbations108</code> it is +0.180 [+0.108, +0.267]; on missing evidence the fine-tuned weights do worse (0.583 against 0.750 for the base weights). Probabilities are not calibrated. Confidence intervals and caveats in the <a href="https://github.com/Axiumine/quillpick#results-so-far">README</a>.</span>
+    </p>
+    <p class="small" style="text-align:center;margin-top:8px">
       <span class="it">Progetto indipendente, non affiliato a TypeSafe.</span>
       <span class="en">Independent project, not affiliated with TypeSafe.</span>
     </p>
