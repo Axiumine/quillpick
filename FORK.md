@@ -13,10 +13,12 @@ These are the facts, with dates:
 
 - The last commit on upstream `main` is `b9ba007`, dated 25 September 2026. There has been none since.
 - Twelve pull requests are open upstream: #2, #8, #16, #17, #19, #21, #24, #26, #27, #28, #30 and
-  #32. None has a review, and the only comments on them are from their own authors.
+  #32. No review has been submitted on any of them, so none has an upstream maintainer's review, and
+  the only comments on them are from their own authors. This fork reviewed the ones it considered
+  merging; what it decided for each is listed below.
 - Upstream issue [#29](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/29), opened on 30 September 2026
   to offer the fixes, the CI and lint setup and the test suite that are in this fork, is open and has no reply
-  from the maintainers; its author added one follow-up on 7 October 2026.
+  from the maintainers; its author added two follow-ups, on 7 October and on 10 November 2026.
 
 Six of those pull requests are merged in this fork, and the others are listed below with the reason
 each is not. They stay open upstream; this fork does not close them or comment on them.
@@ -55,9 +57,10 @@ The 57 commits, counted from `git log b9ba007..52afa67`:
 Test results, with the locked dependencies and the CPU MLX extra, on Linux with Python 3.12:
 
 - Upstream `b9ba007`, its own tests run with this fork's locked dependencies: 82 passed and 6 skipped.
-- This fork: **1809 passed and 6 skipped** in about 20 seconds, with 100% line and branch coverage of
-  `src/rizzo_flow` (1792 statements, 534 branches). The count includes the merged pull requests below. The 6 skipped are the integration tests that
-  load real weights; they run only with `RIZZO_REAL=1`.
+- This fork: **1813 passed and 6 skipped** in between 15 and 40 seconds, depending on the machine and
+  on whether coverage is measured, with 100% line and branch coverage of
+  `src/rizzo_flow` (1792 statements, 534 branches). The count includes the merged pull requests below.
+  The 6 skipped are the integration tests that load real weights; they run only with `RIZZO_REAL=1`.
 
 The tests use fakes: no network, no GPU, no weights and no real llama.cpp runtime. They do not
 show that the real model gives the same answers on a given machine, and **this fork has not
@@ -163,22 +166,30 @@ These are open upstream and are **not** in this fork. Each reason is a fact that
 against the pull request:
 
 - [#27](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/27) and
-  [#28](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/28), by @pieronoviello: they fix bugs
-  that this series has already fixed (see Credits).
+  [#28](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/28), by @pieronoviello: they fix two
+  bugs that this series also fixes (see Credits), so merging them as well would duplicate the change.
 - [#19](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/19), "Fix access violation error on
-  rizzo serve", by @dav04: reviewed, not merged. The change adds no test; on Windows it scans the
-  writable memory of the loaded ggml libraries for a byte pattern and writes to every match, on the
-  stated cause that MSVC mutexes are left uninitialised, which this fork has not reproduced (it has
-  no Windows machine); and it makes `--device auto` retry on the CPU runtime whenever loading the
-  GPU runtime fails, on every platform, with no warning.
+  rizzo serve", by @dav04, which refers to
+  [upstream issue #18](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/18) (an "access
+  violation reading 0x0000000000000000" on `rizzo serve` on Windows 11, reported also with
+  `--device cpu`): reviewed by this fork, not merged. It changes two source files
+  (`backend_llama.py` and `llama_cpp.py`) and adds no test. On Windows it scans the `PAGE_READWRITE`
+  memory of libllama and of the ggml DLLs for a byte pattern (three consecutive 8-byte values
+  2, 0, 0) and calls the MSVC mutex initialiser `_Mtx_init_in_situ` at each match, which writes a
+  mutex structure there; the stated cause is that MSVC mutexes are left uninitialised, which this
+  fork has not reproduced (it has no Windows machine). It also adds a `ggml_log_set` binding, on
+  every platform. A CPU fallback runs only if loading the GPU runtime raises `OSError` or
+  `ValueError`, the device is `auto` and a different CPU runtime is installed; otherwise the original
+  error is raised again. The fallback logs nothing and has no platform guard.
 - [#8](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/8), "Typed records end to end", by
-  @mgattilabs: 64 files changed, 6,205 lines added and 10,165 removed against `b9ba007`, and it
-  conflicts with this fork's `main`.
+  @mgattilabs: 38 files changed, 6,108 lines added and 5,038 removed, as GitHub counts the pull
+  request; it conflicts with this fork's `main`.
 - [#21](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/21), "MAX (Modular) backend", by
-  @msaelices: 29 files changed and 31,759 lines added against `b9ba007`; it conflicts with this
+  @msaelices: 29 files changed, 31,759 lines added and 772 removed; it conflicts with this
   fork's `main`, and it needs the MAX runtime, which this fork has not run.
 - [#2](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/2), "rizzo-flow-rs: an independent Rust
-  port", by @alforiva1970: 88 files of a separate code base, not a change to this one.
+  port", by @alforiva1970: 44 files and 10,173 lines added, none removed: a separate code base, not
+  a change to this one.
 
 ## Names kept for compatibility
 

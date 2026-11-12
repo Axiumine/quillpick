@@ -67,12 +67,15 @@ portatile Intel. Su Linux è segnalata anche una GPU discreta Radeon RX 9070 XT 
 con il fine-tuning del progetto originale (4B Q8_0) e Vulkan, non ROCm ([#23](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/23)).
 Un contributore di questo fork ha riportato Linux con NVIDIA (CUDA e Vulkan su una RTX PRO 4000 Blackwell,
 con i pesi base e sul codice del progetto originale a `c30cc63`, prima del fork: nessuna differenza di
-accuratezza dichiarata rispetto al run Windows, con tutti gli intervalli appaiati che includono lo zero) e
-la modalità CPU su un desktop Ryzen 9 9950X3D (`--threads` conta: di default llama.cpp ne usa 4); i dati
+accuratezza dichiarata rispetto al run Windows, con tutti gli intervalli appaiati che includono lo zero;
+36 ms di mediana (p50) per decisione con il 4B Q8_0 su CUDA, mentre la build Vulkan sulla stessa GPU è
+circa 1,8× più lenta, 66 contro 36 ms) e la modalità CPU su un desktop Ryzen 9 9950X3D (727 ms di mediana
+con `--threads 16`; `--threads` conta: se non è impostato llama.cpp usa 4 thread, circa 3× più lento sullo
+smoke); i dati
 grezzi sono nel [ramo `hardware-report-issue-25`](https://github.com/Axiumine/quillpick/tree/hardware-report-issue-25) di questo repository e il report è la
-[issue #25 del progetto originale](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/25). Sono misure di quel contributore, sulla sua macchina. Queste
-prove non sono state riprodotte dai manutentori originali né da questo fork; ROCm, SYCL e una macchina
-senza GPU dedicata restano da verificare.
+[issue #25 del progetto originale](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/25). Sono misure di un contributore di questo fork, sulla sua macchina,
+e nessun altro le ha riprodotte. Le segnalazioni su Mac, Radeon e Intel non sono state riprodotte dai manutentori
+originali né da questo fork; ROCm, SYCL e una macchina senza GPU dedicata restano da verificare.
 
 I pesi predefiniti (`--weights flow`) sono il fine-tuning del progetto originale, fuso nei pesi e convertito in
 GGUF ([4B](https://huggingface.co/rizzoaiacademy/rizzo-flow),

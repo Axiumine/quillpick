@@ -39,7 +39,7 @@ uv sync --extra test --extra cpu --locked         # llama.cpp non richiede extra
 .venv/bin/rizzo download --only runtime --runtime vulkan   # un'altra build; --backend mlx scarica i pesi originali (~8 GB)
 .venv/bin/rizzo devices                           # device visti da llama.cpp e scelta di auto; su Windows gli eseguibili sono in .venv/Scripts/
 .venv/bin/pytest -q                               # circa 1790 test (+6 saltati), ordine casuale, nessun peso, nessuna rete
-.venv/bin/pytest -q --cov                         # + gate di copertura: 100% righe e rami (~20 s)
+.venv/bin/pytest -q --cov                         # + gate di copertura: 100% righe e rami (15-40 s, a seconda della macchina)
 RIZZO_REAL=1 .venv/bin/pytest -q -m integration   # 6 test con runtime e GGUF reali (il più piccolo Q8_0 presente)
 .venv/bin/pytest tests/test_compat.py::test_systemone_wire_shape   # test singolo
 .venv/bin/ruff check . && .venv/bin/ruff format --check . && .venv/bin/mypy
