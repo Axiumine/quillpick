@@ -57,12 +57,12 @@ The 57 commits, counted from `git log b9ba007..52afa67`:
 Test results, with the locked dependencies and the CPU MLX extra, on Linux with Python 3.12:
 
 - Upstream `b9ba007`, its own tests run with this fork's locked dependencies: 82 passed and 6 skipped.
-- This fork: **1836 passed and 10 skipped** in between 15 and 40 seconds, depending on the machine and
+- This fork: **1878 passed and 11 skipped** in between 15 and 40 seconds, depending on the machine and
   on whether coverage is measured, with 100% line and branch coverage of
-  `src/rizzo_flow` (1817 statements, 536 branches). The count includes the merged pull requests below
-  and the security release.
+  `src/rizzo_flow` (1833 statements, 542 branches). The count includes the merged pull requests below
+  and the security fixes.
   Nine of the skipped are the integration tests that load real weights; they run only with
-  `RIZZO_REAL=1`. The tenth needs torch, which is not in this project's environment.
+  `RIZZO_REAL=1`. The other two need torch, which is not in this project's environment.
 
 The tests use fakes: no network, no GPU, no weights and no real llama.cpp runtime. They do not
 show that the real model gives the same answers on a given machine, and **this fork has not
@@ -137,28 +137,50 @@ been run with the real model or a real runtime by this fork**.
 
 ## Security releases
 
-### 24 November 2026: two defects fixed
+### Tokenizer stack and `trainer.pt`
 
-Both defects are in upstream `main` up to `b9ba007` and in every commit of this fork before the two
-commits below. Each commit message describes the defect and the fix.
+Two defects are fixed. Both are in upstream `main` up to `b9ba007` and in every commit of this fork
+before the fixes. Each commit message describes the defect and the fix; the fixes are `eafee4a`
+and `337088b`, and the commits that complete them are `bb7ec3c` and `1e64828`.
 
-- **A long request could end the server process.** llama.cpp's pre-tokenizer recurses once per
-  character of a run of letters, punctuation, spaces or CJK, and the state of a request may be up
-  to 256,000 bytes. On Linux x86-64 with llama.cpp `b11081`, a state of 26,181 repeated characters
-  overflowed the 8 MiB stack of a thread and ended the whole process with SIGSEGV (26,180 were
-  answered). Fixed in `eafee4a`: `llama_tokenize` runs on one worker thread with a 256 MiB stack.
-  Checked with the real runtime and the 1.7B Q8_0 weights: before, 28,000 and 40,000 repeated
-  characters ended the process; after, 28,000 is answered, and 40,000 and 250,000 get an HTTP 422
-  (more tokens than `--ctx`) while the server stays up. Not run on Windows or macOS.
+- **Long runs of text could end the server process.** Long runs of letters, punctuation or CJK
+  characters overflow the stack that `llama_tokenize` gets on an ordinary thread, and the whole
+  process ends with SIGSEGV; the state of a request may be up to 256,000 bytes. Measured on x86-64
+  Linux with llama.cpp `b11081` (CUDA package) and the 8 MiB default thread stack: the letter 'a'
+  stops at about 26,000 repeated characters (26,180 were answered, 26,181 ended the process),
+  40,000 '!' or CJK characters also end it, and stack use grew linearly, about 320 bytes per
+  character, which is consistent with recursion in the pre-tokenizer's regular expression (no
+  backtrace was taken). `eafee4a` runs `llama_tokenize` on one worker thread with a 256 MiB stack.
+  `bb7ec3c` handles a system that cannot give that stack: one warning in the log, the start is
+  retried on the next call instead of being remembered, and meanwhile a run of more than 20,000
+  characters of one kind is refused with HTTP 422. Checked with the real runtime and the 1.7B Q8_0
+  weights: before the fix 28,000 and 40,000 'a' ended the process; after it 28,000 is answered and
+  40,000 and 250,000 get an HTTP 422 (more tokens than `--ctx`) while the server stays up; with the
+  stack refused (`ulimit -v`), 40,000 'a' gets an HTTP 422 with the new message and the server
+  stays up.
 - **`train_lora.py --resume` ran the code in a `trainer.pt`.** The file is a pickle and was read
   with `torch.load(weights_only=False)`, so resuming from a `trainer.pt` taken from an untrusted
   source ran what it contained. This is reachable only through the training script, not through the
-  server or the `rizzo` commands. Fixed in `337088b`: it is read with `weights_only=True`, it is
-  written aside and read back before it is renamed, and the script stops on torch older than 2.6
-  (up to 2.5.1 even `weights_only=True` could run code, CVE-2025-32434). Checked with torch 2.11.0:
-  a `trainer.pt` with a payload ran it under the old code and is refused by the new. Not run: a
-  resume of a real training run, and an actual torch older than 2.6 (the version check was
-  exercised with version strings).
+  server or the `rizzo` commands. `337088b`: it is read with `weights_only=True`, written aside and
+  read back before it is renamed, and the script stops on torch older than 2.6 (up to 2.5.1 even
+  `weights_only=True` could run code, CVE-2025-32434). `1e64828`: the refusal message is this
+  project's own (torch's suggests turning the protection off), a failed write leaves no `.part`
+  file, pre-releases of torch 2.6.0 are refused as well, and every script of `training/` that loads
+  weights through torch checks the version first. Checked with torch 2.11.0: a `trainer.pt` with a
+  payload ran it under the old code and is refused by the new.
+
+Known limitations of these fixes and of the code around them:
+
+- Windows and macOS thread stacks were not tested, so the thresholds above are for Linux only.
+- A resume of a real training run with the fixed code was not run, and neither was a genuine torch
+  older than 2.6 (the version check was exercised with version strings).
+- Not a fix of these defects, and no fix is claimed: the limit of 256 questions per request merged
+  from upstream pull request #17 lets one request hold the engine for a long time, because the full
+  prompt is tokenized twice per question while the engine lock is held. One request with a
+  255,012-byte state and 256 questions took 44.8 seconds (1.7B Q8_0, CUDA, `--ctx 70000`, a
+  repetitive English text; 29.0 seconds of it preparing the prompts and 15.7 seconds of inference),
+  and a small request that arrived 5 seconds after it waited 39.8 seconds. Other models and machines
+  will differ.
 
 ## Credits
 
