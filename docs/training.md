@@ -86,7 +86,10 @@ uv pip install -p .venv-train -e . --no-deps   # rizzo_flow importabile (prompt 
 ```
 
 Versioni esatte in [`training/requirements.txt`](../training/requirements.txt). `transformers`
-è fissato a **4.57.1**, la versione che ha scritto il checkpoint. Su Windows gli eseguibili sono
+è fissato a **4.57.1**, la versione che ha scritto il checkpoint. `torch` deve essere **2.6 o
+successivo** (qui 2.11.0): `train_lora.py` si rifiuta di partire con uno più vecchio, perché
+`--resume` legge `trainer.pt`, un pickle, con `torch.load(weights_only=True)`, che fino alla 2.5.1
+poteva ancora eseguire codice (CVE-2025-32434). Su Windows gli eseguibili sono
 in `.venv-train/Scripts/`, su Linux in `.venv-train/bin/`: negli esempi sotto `PY` sta per
 `.venv-train/Scripts/python` o `.venv-train/bin/python`.
 
@@ -339,6 +342,13 @@ Misurato: `2 × 2043` → 11,48 GiB, `4 × 1024` → 10,86 GiB.
   i parametri devono essere gli stessi, altrimenti lo script si rifiuta (possono cambiare solo
   `--eval-every`, `--log-every`, `--dev-limit`). Si perde al massimo il lavoro dopo l'ultimo
   checkpoint (200 step ≈ 45 minuti su 5060 Ti).
+- `trainer.pt` è un pickle, e `--resume` lo legge **solo** con `torch.load(weights_only=True)`: un
+  file preso da altrove non può eseguire codice mentre viene letto (vale da torch 2.6, vedi sez. 3),
+  e se contiene altro che numeri, stringhe, liste, tuple, dizionari e tensori viene rifiutato.
+  Il salvataggio scrive `trainer.pt.part`, lo rilegge con `weights_only=True` e solo allora lo
+  rinomina in `trainer.pt`: un campo che `--resume` non saprebbe leggere fa fallire il checkpoint
+  che lo scrive, non la ripresa ore dopo. Si riprendono comunque solo checkpoint dei propri run;
+  `adapter_model.safetensors` accanto a `trainer.pt` è safetensors e non esegue codice.
 - Il log riporta ogni `--log-every` step:
   `train step 10/1770 (0.6%) elapsed 0h02m28s ETA 7h14m54s loss 2.4873 lr 9.43e-06 739 tok/s peak 11.3 GiB`.
 - Una directory di run non viene mai sovrascritta (`--out` esistente → errore).
