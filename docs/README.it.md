@@ -20,14 +20,16 @@ GPU Apple, NVIDIA, AMD e Intel oppure sola CPU, senza compilare nulla. MLX, il r
 del progetto, resta disponibile con `--backend mlx`. Verificato con i pesi reali su Windows 10 +
 RTX 5060 Ti (build CUDA e build Vulkan), secondo il progetto originale (non rimisurato da questo
 fork): 65 test superati, API funzionante, smoke Q8_0 0.95 con 66 ms di mediana. Segnalazioni pubbliche descrivono anche prove su Mac M3 Pro/Metal, Radeon 780M,
-Radeon RX 9070 XT e Intel Iris Xe/Vulkan, oltre alla modalità CPU su un portatile Intel; non sono state riprodotte dai
-manutentori originali ([#5](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/5), [#7](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/7), [#11](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/11), [#23](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/23)). Risultati, errori e limiti sono in [results/README.md](../results/README.md).
+Radeon RX 9070 XT, Intel Iris Xe/Vulkan e Linux con NVIDIA (CUDA e Vulkan), oltre alla modalità CPU su un portatile
+Intel e su un desktop Ryzen 9 9950X3D; non sono state riprodotte dai manutentori originali ([#5](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/5), [#7](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/7), [#11](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/11), [#23](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/23), [#25](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/25)). Risultati, errori e limiti sono in [results/README.md](../results/README.md).
 
 **Su questo fork.** Il codice è il `main` del progetto originale al 25 settembre 2026 più le correzioni,
 la CI con i controlli di stile e la suite di test elencate in [FORK.md](../FORK.md). Il testo che segue è
 ereditato dal progetto originale: dove dice «noi», «nostro» o «i manutentori» intende il progetto
 originale, non questo fork, e ogni misura è stata fatta dal progetto originale sulle sue macchine, con i
-limiti scritti accanto; questo fork non ha rifatto nessuna misura. Le righe «Rizzo Flow 4B» e «Rizzo Flow
+limiti scritti accanto; questo fork non ha rifatto nessuna misura. L'unica eccezione sono le cifre di
+Linux con NVIDIA e di sola CPU nella tabella dell'hardware, misurate da un contributore di questo fork
+sul codice del progetto originale, prima del fork, sulla sua macchina. Le righe «Rizzo Flow 4B» e «Rizzo Flow
 1.7B» delle tabelle sono i pesi fine-tuned pubblicati da Rizzo AI Academy (`rizzoaiacademy/rizzo-flow*`
 su Hugging Face), non addestrati da questo fork. Per compatibilità col progetto originale e con i pesi
 pubblicati restano invariati il pacchetto Python (`rizzo_flow`), il comando `rizzo`, le variabili
@@ -63,8 +65,14 @@ stessa scheda (stesse risposte: 3 argmax diversi su 252). Segnalazioni pubbliche
 Mac M3 Pro/Metal, AMD Radeon 780M/Vulkan, Intel Iris Xe/Vulkan e una prova in modalità CPU su un
 portatile Intel. Su Linux è segnalata anche una GPU discreta Radeon RX 9070 XT (RDNA4, RADV gfx1201)
 con il fine-tuning del progetto originale (4B Q8_0) e Vulkan, non ROCm ([#23](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/23)).
-Queste prove non sono state riprodotte dai manutentori originali né da questo fork; ROCm, SYCL e una
-macchina senza GPU dedicata restano da verificare.
+Un contributore di questo fork ha riportato Linux con NVIDIA (CUDA e Vulkan su una RTX PRO 4000 Blackwell,
+con i pesi base e sul codice del progetto originale a `c30cc63`, prima del fork: nessuna differenza di
+accuratezza dichiarata rispetto al run Windows, con tutti gli intervalli appaiati che includono lo zero) e
+la modalità CPU su un desktop Ryzen 9 9950X3D (`--threads` conta: di default llama.cpp ne usa 4); i dati
+grezzi sono nel [ramo `hardware-report-issue-25`](https://github.com/Axiumine/quillpick/tree/hardware-report-issue-25) di questo repository e il report è la
+[issue #25 del progetto originale](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/25). Sono misure di quel contributore, sulla sua macchina. Queste
+prove non sono state riprodotte dai manutentori originali né da questo fork; ROCm, SYCL e una macchina
+senza GPU dedicata restano da verificare.
 
 I pesi predefiniti (`--weights flow`) sono il fine-tuning del progetto originale, fuso nei pesi e convertito in
 GGUF ([4B](https://huggingface.co/rizzoaiacademy/rizzo-flow),
