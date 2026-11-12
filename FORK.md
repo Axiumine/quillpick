@@ -52,15 +52,17 @@ The 57 commits, counted from `git log b9ba007..52afa67`:
   and Windows with Python 3.11 and 3.14.
 - **22 commits for the test suite.** 19 of them add tests, one configures mutation testing
   (`mutmut`), one sets the 100% coverage gate in CI and one documents how to run all this. On
-  `b9ba007` the tests were 8 `test_*.py` files; this fork has 48.
+  `b9ba007` the tests were 8 `test_*.py` files; this fork has 49.
 
 Test results, with the locked dependencies and the CPU MLX extra, on Linux with Python 3.12:
 
 - Upstream `b9ba007`, its own tests run with this fork's locked dependencies: 82 passed and 6 skipped.
-- This fork: **1813 passed and 6 skipped** in between 15 and 40 seconds, depending on the machine and
+- This fork: **1836 passed and 10 skipped** in between 15 and 40 seconds, depending on the machine and
   on whether coverage is measured, with 100% line and branch coverage of
-  `src/rizzo_flow` (1792 statements, 534 branches). The count includes the merged pull requests below.
-  The 6 skipped are the integration tests that load real weights; they run only with `RIZZO_REAL=1`.
+  `src/rizzo_flow` (1817 statements, 536 branches). The count includes the merged pull requests below
+  and the security release.
+  Nine of the skipped are the integration tests that load real weights; they run only with
+  `RIZZO_REAL=1`. The tenth needs torch, which is not in this project's environment.
 
 The tests use fakes: no network, no GPU, no weights and no real llama.cpp runtime. They do not
 show that the real model gives the same answers on a given machine, and **this fork has not
@@ -132,6 +134,31 @@ been run with the real model or a real runtime by this fork**.
   of this repository, and the report itself is
   [upstream issue #25](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/25). Nobody else has
   reproduced it. Upstream's own text keeps its attribution to upstream.
+
+## Security releases
+
+### 24 November 2026: two defects fixed
+
+Both defects are in upstream `main` up to `b9ba007` and in every commit of this fork before the two
+commits below. Each commit message describes the defect and the fix.
+
+- **A long request could end the server process.** llama.cpp's pre-tokenizer recurses once per
+  character of a run of letters, punctuation, spaces or CJK, and the state of a request may be up
+  to 256,000 bytes. On Linux x86-64 with llama.cpp `b11081`, a state of 26,181 repeated characters
+  overflowed the 8 MiB stack of a thread and ended the whole process with SIGSEGV (26,180 were
+  answered). Fixed in `eafee4a`: `llama_tokenize` runs on one worker thread with a 256 MiB stack.
+  Checked with the real runtime and the 1.7B Q8_0 weights: before, 28,000 and 40,000 repeated
+  characters ended the process; after, 28,000 is answered, and 40,000 and 250,000 get an HTTP 422
+  (more tokens than `--ctx`) while the server stays up. Not run on Windows or macOS.
+- **`train_lora.py --resume` ran the code in a `trainer.pt`.** The file is a pickle and was read
+  with `torch.load(weights_only=False)`, so resuming from a `trainer.pt` taken from an untrusted
+  source ran what it contained. This is reachable only through the training script, not through the
+  server or the `rizzo` commands. Fixed in `337088b`: it is read with `weights_only=True`, it is
+  written aside and read back before it is renamed, and the script stops on torch older than 2.6
+  (up to 2.5.1 even `weights_only=True` could run code, CVE-2025-32434). Checked with torch 2.11.0:
+  a `trainer.pt` with a payload ran it under the old code and is refused by the new. Not run: a
+  resume of a real training run, and an actual torch older than 2.6 (the version check was
+  exercised with version strings).
 
 ## Credits
 
