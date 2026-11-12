@@ -72,6 +72,15 @@ def test_criteria_size_limits(kind, low, high):
             build(count)
 
 
+def test_the_wire_request_takes_between_one_and_256_questions():
+    # The same bound as the native request: the compatible endpoint translates one to the other.
+    assert len(wire(**{f"q{i}": noul() for i in range(256)}).questions) == 256
+    with pytest.raises(ValidationError, match="at most 256 items"):
+        wire(**{f"q{i}": noul() for i in range(257)})
+    with pytest.raises(ValidationError, match="at least 1 item"):
+        wire()
+
+
 def test_unknown_fields_are_ignored_on_the_request_but_not_in_questions():
     body: dict[str, Any] = {
         "state": "s",

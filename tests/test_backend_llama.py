@@ -102,6 +102,18 @@ def test_shared_prefills_once_and_packs_suffixes_without_padding():
     assert "peak_device_bytes" not in timing
 
 
+def test_a_request_of_256_questions_is_answered_in_microbatches_on_one_prefix():
+    prefix = list(range(100, 110))
+    jobs = [job(f"q{i}", prefix, [i % 7 + 1] * (i % 5 + 1)) for i in range(256)]
+    engine = backend(batch_size=4)
+    logits, timing = engine.score(prefix, jobs, "shared")
+    assert sorted(logits) == sorted(f"q{i}" for i in range(256))
+    assert timing["batches"] == 64  # four questions per microbatch
+    assert timing["shared_prefix_tokens"] == 10
+    assert engine.session.cells == {0: list(range(10))}  # every branch was dropped
+    assert max(c[2] for c in engine.session.calls if c[0] == "branch") == 4  # never more sequences
+
+
 def test_direct_recomputes_every_question_from_an_empty_cache():
     prefix = [100, 101]
     jobs = [job("a", prefix, [1]), job("b", prefix, [2, 3])]

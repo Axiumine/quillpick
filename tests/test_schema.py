@@ -347,13 +347,13 @@ def test_the_state_limit_applies_to_structured_state_too():
     assert value_errors(lambda: request_with_state([["x" * 100_000] * 3])) == [STATE_LIMIT]
 
 
-def test_request_needs_between_one_and_64_questions():
+def test_request_needs_between_one_and_256_questions():
     with pytest.raises(ValidationError, match="at least 1 item"):
         Request.model_validate({"state": "s", "questions": {}})
-    body = {f"q{i}": question_payload() for i in range(64)}
-    assert len(Request.model_validate({"state": "s", "questions": body}).questions) == 64
-    body["q64"] = question_payload()
-    with pytest.raises(ValidationError, match="at most 64 items"):
+    body = {f"q{i}": question_payload() for i in range(256)}
+    assert len(Request.model_validate({"state": "s", "questions": body}).questions) == 256
+    body["q256"] = question_payload()
+    with pytest.raises(ValidationError, match="at most 256 items"):
         Request.model_validate({"state": "s", "questions": body})
 
 

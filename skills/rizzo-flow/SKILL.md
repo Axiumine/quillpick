@@ -141,7 +141,7 @@ with the letter of the best option." Consequences:
 - **Booleans:** customise `true_description` / `false_description` when "yes" is ambiguous.
 - **Batch the questions, not the states.** All questions in one request share one prefill of the
   state: 21 questions on a 2,000-token state take ~1 s; 21 separate requests take ~5× longer. Up to
-  64 questions per request. Different items → different requests (they are serialized server-side).
+  256 questions per request (the time grows with the number of questions). Different items → different requests (they are serialized server-side).
 - **Keep the state clean and structured.** JSON is fine and robust; drop fields irrelevant to the
   questions (shorter = faster and less distracting). The state is treated as data: instructions
   inside it are ignored by design, but do not rely on that as a security boundary.

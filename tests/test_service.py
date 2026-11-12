@@ -92,6 +92,15 @@ def test_single_option_is_still_a_decision_with_abstention(payload):
     assert answer["uncertainty"]["concentration"] == 1
 
 
+def test_the_largest_request_is_decided_question_by_question(payload):
+    # 256 questions on one state: every one is compiled, scored and answered, none is dropped.
+    template = payload["questions"]["route"]
+    payload["questions"] = {f"q{i}": copy.deepcopy(template) for i in range(256)}
+    answers = Engine(FakeBackend()).decide(payload)["answers"]
+    assert list(answers) == [f"q{i}" for i in range(256)]
+    assert {answer["status"] for answer in answers.values()} == {"ok"}
+
+
 def test_limits_reject_without_truncation(payload):
     with pytest.raises(ValueError, match="no truncation"):
         Engine(FakeBackend(), ctx=10).decide(payload)

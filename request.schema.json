@@ -274,7 +274,7 @@
           }
         ]
       },
-      "maxProperties": 64,
+      "maxProperties": 256,
       "minProperties": 1,
       "title": "Questions",
       "type": "object"

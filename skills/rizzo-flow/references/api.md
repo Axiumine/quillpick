@@ -23,7 +23,7 @@ and a bare `urllib` request do not, so add the header (`curl -H 'Content-Type: a
 ```jsonc
 {
   "state": "text" | {…} | […],        // required, non-empty, ≤ 256 KB serialized
-  "questions": {                       // 1–64 entries; key = your id (1–128 chars)
+  "questions": {                       // 1–256 entries; key = your id (1–128 chars)
     "<id>": <Question>
   },
   "mode": "shared"                     // default; "direct" = no prefix reuse (debug/reference only)

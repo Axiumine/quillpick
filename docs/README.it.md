@@ -155,7 +155,7 @@ Un client scritto per l'API ospitata può puntare qui cambiando soltanto l'URL d
   La formula esatta di Jev non è pubblica. Descrive la forma della distribuzione: non è calibrata.
   Sul checkpoint Spark le distribuzioni sono spesso molto concentrate (0.9999): senza temperature
   scaling sul proprio dominio le soglie di confidence pensate per Jev non sono trasferibili.
-- Limiti locali: 26 opzioni per `choice` (una per lettera; Jev: 255), 10 livelli per `score`, 64 domande,
+- Limiti locali: 26 opzioni per `choice` (una per lettera; Jev: 255), 10 livelli per `score`, 256 domande,
   8000 caratteri per `instructions` e per ogni descrizione. `instructions`/`criteria` strutturati
   vengono serializzati come JSON canonico.
 - `usage.input_tokens` conta lo state una volta sola più i suffissi; `output_tokens` è sempre 0.
@@ -188,7 +188,9 @@ Un client scritto per l'API ospitata può puntare qui cambiando soltanto l'URL d
 
 Ogni richiesta contiene uno `state` (testo, oggetto o array) e un dizionario `questions`.
 Gli ID delle domande non sono inviati al modello. Le descrizioni devono essere autonome.
-Massimo 64 domande per richiesta. Ogni candidato, speciali inclusi, è una lettera maiuscola a token
+Massimo 256 domande per richiesta: condividono il prefill dello state, ma ognuna ha il suo passaggio
+sul testo della domanda, quindi il tempo cresce con il loro numero (le richieste vicine al limite non
+sono state cronometrate). Ogni candidato, speciali inclusi, è una lettera maiuscola a token
 singolo verificata con il tokenizer ufficiale: 26 slot in tutto. Quindi 26 opzioni o livelli con
 `allow_abstain: false`, 25 con l'astensione (default); per `numeric` 24 ancore, 23 con l'astensione.
 Una `choice` con una sola opzione resta una decisione con l'astensione attiva (quell'opzione oppure

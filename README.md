@@ -482,6 +482,9 @@ the real SDK). **The interface is compatible, the model is not Jev:**
 cache: 8 yes/no questions on a 218-token contract cost 1 prefill + 2 micro-batches, 136 ms of
 inference in total rather than 8 full passes. (It got 7 of the 8 right: asked whether a 60-day
 payment term is longer than 30 days, it said no with p = 0.75. Probabilities are not guarantees.)
+A request takes 1 to 256 questions. They share the state's prefill, but each still costs its own
+pass over its question text, so the time grows with the number of questions; requests near that
+limit have not been timed.
 
 ---
 
