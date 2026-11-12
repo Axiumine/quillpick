@@ -16,6 +16,7 @@ from pydantic import (
 Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=8000)]
 Number = Annotated[float, Field(allow_inf_nan=False, ge=-1e100, le=1e100)]
 MAX_SLOTS = 26  # every candidate, special ones included, is one uppercase answer letter
+MAX_QUESTIONS = 256  # per request; scoring latency scales linearly with question count
 
 
 def require_unicode(value):
@@ -129,7 +130,7 @@ Question = Annotated[
 
 class Request(Strict):
     state: str | dict[str, JsonValue] | list[JsonValue]
-    questions: dict[str, Question] = Field(min_length=1, max_length=64)
+    questions: dict[str, Question] = Field(min_length=1, max_length=MAX_QUESTIONS)
     mode: Literal["shared", "direct"] = "shared"
 
     @field_validator("state", "questions", mode="before")

@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator, m
 
 from .config import MODEL_ID
 from .prompts import canonical
-from .schema import MAX_SLOTS, Request, require_unicode
+from .schema import MAX_QUESTIONS, MAX_SLOTS, Request, require_unicode
 
 LOCAL_ALIAS = "rizzo-latest"
 # Accepted so that clients written for the hosted API work unchanged against localhost.
@@ -59,7 +59,7 @@ class SystemOneRequest(Wire):
 
     state: Structured
     model: str = Field(min_length=1, max_length=128)
-    questions: dict[str, WireQuestion] = Field(min_length=1, max_length=64)
+    questions: dict[str, WireQuestion] = Field(min_length=1, max_length=MAX_QUESTIONS)
 
     @field_validator("state", "model", "questions", mode="before")
     @classmethod
