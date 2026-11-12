@@ -24,10 +24,37 @@ MODEL_DIR = (
     / {"4b": "Spark-X2.5-4B", "1.7b": "Spark-X2.5-1.7B"}[os.environ.get("RIZZO_TRAIN_SIZE", "4b")]
 )
 DATA_DIR = ROOT / ".research" / "train-data"
+# torch.load(weights_only=True) keeps a pickle (trainer.pt, an adapter's .bin file) from running
+# code only from torch 2.6.0 on: up to 2.5.1 a crafted file could still run code through it
+# (CVE-2025-32434), and a pre-release of 2.6.0 may predate the fix. Every script that loads weights
+# through torch (load_model, train_lora's resume) checks this first; the floor is also in
+# requirements.txt.
+TORCH_FLOOR = "2.6.0"
 
 
 def log(message):
     print(f"[{time.strftime('%H:%M:%S')}] {message}", flush=True)
+
+
+def require_torch_floor():
+    """Stop on a torch older than TORCH_FLOOR, a pre-release of it, or a version that cannot be
+    read. (packaging comes with transformers, which requirements.txt pins.)"""
+    import torch
+    from packaging.version import InvalidVersion, Version
+
+    try:
+        found = Version(str(torch.__version__))
+    except InvalidVersion:
+        found = None
+    if found is None or found < Version(TORCH_FLOOR):
+        raise SystemExit(
+            f"torch {torch.__version__} is older than {TORCH_FLOOR} (a pre-release of it counts as "
+            "older), or its version cannot be read. Up to torch 2.5.1 even "
+            "torch.load(weights_only=True), which this project uses for the pickles it reads, "
+            "could be made to run code from a crafted file (CVE-2025-32434), and a pre-release of "
+            f"{TORCH_FLOOR} may predate the fix. Install torch>={TORCH_FLOOR} (docs/training.md, "
+            "section 3)"
+        )
 
 
 class Progress:
@@ -76,6 +103,8 @@ def compile_native(tok, native_request: dict, ctx=4096):
 def load_model(quant="bf16", dtype=None):
     import torch
     from transformers import AutoModelForCausalLM
+
+    require_torch_floor()  # before any weights are read: an old torch loads pickles unguarded
 
     # On Windows the driver spills past VRAM into system RAM instead of failing, and a run then
     # crawls for minutes (seen with --no-checkpointing). Capping the allocator turns that into an

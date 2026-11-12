@@ -284,9 +284,10 @@ sulla pagina vanno tenuti allineati a README e `results/`.
 Addestrato dall'utente con `training/` (pipeline in `docs/training.md`) su RTX PRO 6000, pesi fusi
 e pubblicati in GGUF sui due repo HF (resi pubblici il 25 settembre su richiesta dell'utente).
 `training/train_lora.py --resume` legge `trainer.pt` (un pickle) solo con `torch.load(weights_only=True)`,
-scrive il checkpoint come `trainer.pt.part`, lo rilegge e solo allora lo rinomina, e si ferma su torch
-< 2.6 (fino alla 2.5.1 anche `weights_only=True` poteva eseguire codice, CVE-2025-32434); vedi
-`docs/training.md` sez. 3 e 8 e `tests/test_training_trainer_state.py`.
+scrive il checkpoint come `trainer.pt.part`, lo rilegge e solo allora lo rinomina; ogni script di
+`training/` che carica pesi con torch (`load_model`, `export_gguf.py`) si ferma su torch < 2.6.0, una
+sua pre-release compresa (fino alla 2.5.1 anche `weights_only=True` poteva eseguire codice,
+CVE-2025-32434); vedi `docs/training.md` sez. 3 e 8 e `tests/test_training_trainer_state.py`.
 `--weights flow|base` su CLI e script, per entrambi i backend: MLX scarica dagli stessi repo il
 checkpoint BF16 safetensors fuso (radice del repo, `config.FLOW_CHECKPOINTS`, sha256 dei shard
 fissati; solo i file di `CHECKPOINT_FILES`, niente GGUF né adapter) in `models/rizzo-flow*/`.

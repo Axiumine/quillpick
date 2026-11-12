@@ -13,6 +13,7 @@ sequence per forward keeps the readout trivially correct) with gradient accumula
 import argparse
 import json
 import math
+import pickle
 import random
 import re
 import sys
@@ -21,71 +22,62 @@ from collections import defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import DATA_DIR, Progress, fmt, load_model, log, read_jsonl
+from common import DATA_DIR, Progress, fmt, load_model, log, read_jsonl, require_torch_floor
 
 TARGETS = ["q_k_v_proj", "g_proj", "out_proj", "gate_proj", "up_proj", "down_proj"]
-# torch.load(weights_only=True) keeps a trainer.pt from running code only from torch 2.6 on: up to
-# 2.5.1 a crafted file could still run code through it (CVE-2025-32434). The pickle protection of
-# --resume is worth nothing on an older torch, so that is refused (and the floor is in
-# requirements.txt).
-TORCH_FLOOR = (2, 6)
 
 
-def require_torch_floor():
-    """Stop on a torch older than TORCH_FLOOR, or whose version cannot be read."""
-    import torch
+class TrainerStateRefused(Exception):
+    """torch.load(weights_only=True) refused a trainer.pt: it holds more than tensors and plain
+    data. The message is ours alone: torch's advises switching the protection off."""
 
-    found = re.match(r"(\d+)\.(\d+)", torch.__version__)
-    if not found or tuple(map(int, found.groups())) < TORCH_FLOOR:
-        floor = ".".join(map(str, TORCH_FLOOR))
-        raise SystemExit(
-            f"torch {torch.__version__} is not {floor} or later: torch.load(weights_only=True), "
-            "which --resume uses so that a trainer.pt from elsewhere cannot run code while it is "
-            "unpickled, could still be made to run code up to torch 2.5.1 (CVE-2025-32434). "
-            f"Install torch>={floor} (docs/training.md, section 3)"
+    def __init__(self, path, error):
+        found = re.search(r"GLOBAL ([\w.]+)", str(error))  # the object torch names, nothing else
+        self.detail = f" (the first one refused: {found[1]})" if found else ""
+        super().__init__(
+            f"{path} holds objects other than tensors and plain data{self.detail}, and was "
+            "refused. Do not load checkpoint files from sources you do not trust."
         )
 
 
 def load_trainer_state(path, map_location=None):
     """Read a `trainer.pt` the one way --resume reads it: weights_only, so that a file taken from
-    elsewhere cannot run code while it is unpickled (which holds from torch 2.6: TORCH_FLOOR)."""
+    elsewhere cannot run code while it is unpickled (which holds from torch 2.6.0, see
+    common.TORCH_FLOOR). Raises TrainerStateRefused for a file that holds anything else."""
     import torch
 
     require_torch_floor()
-    return torch.load(path, weights_only=True, map_location=map_location)
+    try:
+        return torch.load(path, weights_only=True, map_location=map_location)
+    except pickle.UnpicklingError as error:
+        raise TrainerStateRefused(path, error) from None
 
 
 def save_trainer_state(state, path):
     """Write `state` to `path` and prove that --resume can read it back.
 
-    torch.save pickles anything, while the load in --resume admits only plain types and tensors
+    torch.save pickles anything, while the load in --resume admits only tensors and plain data
     (no Path, no numpy scalar, no object of ours). A field of another kind would write without a
     word and fail hours later, when the run is resumed; reading the file back here makes it fail at
-    the checkpoint that wrote it. The file gets its name only after it has passed."""
+    the checkpoint that wrote it. The file gets its name only after it has passed, and a failed
+    write or read leaves no `.part` behind."""
     import torch
 
     require_torch_floor()  # before anything is written: on an older torch --resume is refused
     partial = path.with_name(path.name + ".part")
-    torch.save(state, partial)
     try:
+        torch.save(state, partial)
         load_trainer_state(partial, map_location="cpu")
-    except Exception as error:
+    except TrainerStateRefused as error:
         partial.unlink(missing_ok=True)
-        # torch's message runs to several paragraphs and starts by advising to switch the guard off:
-        # quote only the line that names what it refused.
-        detail = next(
-            (
-                line.strip()
-                for line in str(error).splitlines()
-                if "WeightsUnpickler error" in line or "unsupported GLOBAL" in line
-            ),
-            type(error).__name__,
-        )
         raise RuntimeError(
-            f"{path} was not written: --resume reads it with torch.load(weights_only=True), which "
-            f"refuses what was just saved ({detail}). Keep the payload to numbers, strings, lists, "
-            "tuples, dicts and tensors."
-        ) from error
+            f"{path} was not written: its state holds objects other than tensors and plain "
+            f"data{error.detail}, which --resume would refuse to load. Keep the state to "
+            "tensors and plain data."
+        ) from None
+    except BaseException:  # a full disk, Ctrl-C: whatever stopped the write
+        partial.unlink(missing_ok=True)
+        raise
     partial.replace(path)
     log(
         f"{path.parent.name}/{path.name}: {path.stat().st_size / 2**20:.0f} MiB, reads back with weights_only=True"
@@ -219,7 +211,10 @@ def main():
     torch.manual_seed(args.seed)
     if args.resume:
         resume = Path(args.resume)
-        state = load_trainer_state(resume / "trainer.pt")
+        try:
+            state = load_trainer_state(resume / "trainer.pt")
+        except TrainerStateRefused as error:
+            raise SystemExit(str(error)) from None
         saved = state["history"]["args"]
         keep = ("resume", "out", "eval_every", "log_every", "dev_limit")
         changed = {

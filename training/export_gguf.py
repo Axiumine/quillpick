@@ -17,7 +17,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import MODEL_DIR, ROOT, load_model, log
+from common import MODEL_DIR, ROOT, load_model, log, require_torch_floor
 
 LLAMA_SRC = ROOT / ".research" / "llama.cpp-b11081"
 
@@ -58,6 +58,7 @@ def main():
     args = parser.parse_args()
     if bool(args.adapter) == args.base:
         parser.error("give an adapter directory, or --base")
+    require_torch_floor()  # before the output folder is made: the adapter is loaded through torch
     out = ROOT / ".research" / "merged" / args.name
     out.mkdir(parents=True, exist_ok=False)
     hf = out / "hf"
