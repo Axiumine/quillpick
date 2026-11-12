@@ -20,7 +20,7 @@ import pytest
 from fastapi.testclient import TestClient
 from test_llama_cpp import Native
 
-from rizzo_flow import backend_llama, cli, llama_release, runtime
+from rizzo_flow import backend_llama, cli, llama_cpp, llama_release, runtime
 from rizzo_flow.api import create_app
 from rizzo_flow.backend_llama import LlamaBackend
 from rizzo_flow.engine import Engine
@@ -287,3 +287,30 @@ def test_a_llama_decode_that_fails_is_a_503_and_the_next_request_is_served(
     detail = {"detail": f"llama_decode returned {status}: {reason}"}
     assert [(response.status_code, response.json()) for response in failed] == [(503, detail)] * 2
     assert [response.status_code for response in served] == [200, 200]
+
+
+def test_a_long_run_the_tokenizer_cannot_take_is_a_422_and_the_next_request_is_served(
+    stack, monkeypatch
+):
+    # Without the big tokenizer stack the session refuses the text, and the API tells the client
+    # that the request is the problem (422) without losing the process.
+    monkeypatch.setattr(llama_cpp, "_TOKENIZER", llama_cpp._TokenizerWorker())
+
+    def refuse(size=0):
+        raise RuntimeError("can't allocate a stack of that size")
+
+    monkeypatch.setattr(llama_cpp.threading, "stack_size", refuse)
+    long_state = {**REQUEST, "state": {"text": "a" * (llama_cpp.LONG_RUN + 1)}}
+    with closing(LlamaBackend.load(stack.gguf)) as backend:
+        monkeypatch.setattr(sys, "platform", REAL_PLATFORM)
+        with TestClient(create_app(Engine(backend))) as client:
+            refused = [
+                client.post("/v1/decisions", json=long_state),
+                client.post(
+                    "/v1/systemone", json={**NOUL, "state": "a" * (llama_cpp.LONG_RUN + 1)}
+                ),
+            ]
+            served = client.post("/v1/decisions", json=REQUEST)
+    assert [response.status_code for response in refused] == [422, 422]
+    assert all("cannot give the tokenizer" in response.text for response in refused)
+    assert served.status_code == 200

@@ -9,6 +9,7 @@ outlives its context, and a batch is read the way the C side reads it.
 
 import ctypes
 import gc
+import logging
 import os
 import re
 import sys
@@ -473,13 +474,59 @@ def watch_tokenizing_threads(native):
 
 
 @pytest.fixture
-def own_tokenizer_thread():
-    """The tokenizer thread is made once per process and cached: a test that looks at how it is
-    made gets a cache of its own, and the process gets a clean one back (the executor goes, and
-    its worker with it)."""
-    llama_cpp._make_tokenizer_pool.cache_clear()
-    yield
-    llama_cpp._make_tokenizer_pool.cache_clear()
+def own_tokenizer_worker(monkeypatch):
+    """The tokenizer thread is made once per process: a test that looks at how it is made gets a
+    worker of its own, and the process keeps the one it had (this one goes, with its thread)."""
+    worker = llama_cpp._TokenizerWorker()
+    monkeypatch.setattr(llama_cpp, "_TOKENIZER", worker)
+    yield worker
+    if worker._pool is not None:
+        worker._pool.shutdown()
+
+
+@pytest.fixture
+def stack_sizes(monkeypatch):
+    """What `threading.stack_size` is asked to set, in order, what it answered, the size in force
+    when each thread started, and the size in force now.
+
+    `threading.stack_size()` without an argument is not a read: it sets the size to 0. A test that
+    looks at the size by calling it from inside the code under test erases what it came to see."""
+    record = types.SimpleNamespace(set=[], answered=[], now=0, at_start={})
+    real_stack_size, real_start = threading.stack_size, threading.Thread.start
+    real_stack_size(0)
+
+    def stack_size(size=0):
+        record.answered.append(real_stack_size(size))
+        record.set.append(size)
+        record.now = size
+        return record.answered[-1]
+
+    def start(thread):
+        record.at_start[thread.name] = record.now
+        real_start(thread)
+
+    monkeypatch.setattr(llama_cpp.threading, "stack_size", stack_size)
+    monkeypatch.setattr(threading.Thread, "start", start)
+    yield record
+    real_stack_size(0)
+
+
+@pytest.fixture
+def no_big_stack(monkeypatch):
+    """A system that does not give a thread a stack of the size asked for, until told it may."""
+    state = types.SimpleNamespace(refuse=True, attempts=0)
+    real_stack_size = threading.stack_size
+
+    def stack_size(size=0):
+        if size == llama_cpp.TOKENIZER_STACK:
+            state.attempts += 1
+            if state.refuse:
+                raise RuntimeError("can't allocate a stack of that size")
+        return real_stack_size(size)
+
+    monkeypatch.setattr(llama_cpp.threading, "stack_size", stack_size)
+    yield state
+    real_stack_size(0)
 
 
 def changed(struct, defaults):
@@ -1384,9 +1431,15 @@ def test_special_token_ids_are_none_when_the_vocabulary_has_none(runtime, pad, e
 # --- the session: the tokenizer thread -----------------------------------------------------------
 
 
+def worker_threads(record):
+    """The size in force when each tokenizer thread started."""
+    return {n: size for n, size in record.at_start.items() if n.startswith("rizzo-tokenizer")}
+
+
 def test_tokenize_runs_on_one_thread_of_its_own_that_outlives_the_calls(runtime):
-    """llama.cpp recurses once per character of a run of text: about 26,200 repeated characters
-    overflow the stack of an ordinary thread and end the process. The thread has its own stack."""
+    """Long runs of letters, punctuation or CJK characters overflow the stack of an ordinary
+    thread inside llama_tokenize (about 26,000 'a' on the one that was measured). The thread
+    that runs it has a stack of its own."""
     threads = watch_tokenizing_threads(runtime)
     session = load(runtime)
     assert session.tokenize("abc") == [97, 98, 99]
@@ -1398,40 +1451,45 @@ def test_tokenize_runs_on_one_thread_of_its_own_that_outlives_the_calls(runtime)
     assert first.is_alive()
 
 
-def test_the_tokenizer_thread_starts_with_a_big_stack_and_the_setting_is_put_back(
-    own_tokenizer_thread, monkeypatch
+def test_the_tokenizer_thread_starts_while_the_big_stack_size_is_set_and_it_is_put_back(
+    own_tokenizer_worker, stack_sizes
 ):
-    before = threading.stack_size()
-    starting = []
-
-    class Recording(ThreadPoolExecutor):
-        def submit(self, function, /, *args, **kwargs):
-            starting.append(threading.stack_size())  # what a worker started now gets
-            return super().submit(function, *args, **kwargs)
-
-    monkeypatch.setattr(llama_cpp, "ThreadPoolExecutor", Recording)
-    pool = llama_cpp._tokenizer_pool()
-    assert isinstance(pool, Recording)
-    assert starting == [llama_cpp.TOKENIZER_STACK]  # the first job starts the worker
+    pool = own_tokenizer_worker.pool()
+    assert pool is not None
     assert llama_cpp.TOKENIZER_STACK >= 128 * 1024**2  # 64 MiB is not enough for a 256 KB state
-    assert threading.stack_size() == before  # nobody else's threads grow
-    assert llama_cpp._tokenizer_pool() is pool  # made once
+    # The worker is started by the call above, not by a later job, and with the big size in force:
+    assert worker_threads(stack_sizes) == {"rizzo-tokenizer_0": llama_cpp.TOKENIZER_STACK}
+    # The size was set to the big one and then back to what it had been, in that order:
+    assert stack_sizes.set == [llama_cpp.TOKENIZER_STACK, 0]
+    assert stack_sizes.answered == [0, llama_cpp.TOKENIZER_STACK]
+    assert stack_sizes.now == 0  # nobody else's threads grow
+    assert own_tokenizer_worker.pool() is pool  # made once
+    assert stack_sizes.set == [llama_cpp.TOKENIZER_STACK, 0]
+
+
+def test_the_tokenizer_thread_does_not_leave_its_stack_size_to_a_thread_made_later(
+    own_tokenizer_worker, stack_sizes
+):
+    own_tokenizer_worker.pool()
+    later = threading.Thread(target=int, name="made-later")
+    later.start()
+    later.join()
+    assert stack_sizes.at_start["made-later"] == 0
 
 
 def test_callers_on_several_threads_each_get_the_tokens_of_their_own_text(
-    runtime, own_tokenizer_thread
+    runtime, own_tokenizer_worker, stack_sizes
 ):
-    before = threading.stack_size()
     session = load(runtime)
     texts = [f"text {n} é" * (n + 1) for n in range(24)]
     with ThreadPoolExecutor(max_workers=8) as callers:
         results = list(callers.map(session.tokenize, texts))
     assert results == [list(text.encode()) for text in texts]
-    assert threading.stack_size() == before  # the first calls came together: the size is back
+    assert stack_sizes.set == [llama_cpp.TOKENIZER_STACK, 0]  # one worker, the size back
 
 
 def test_first_calls_that_come_together_make_one_worker_and_leave_the_stack_size_alone(
-    own_tokenizer_thread, monkeypatch
+    own_tokenizer_worker, stack_sizes, monkeypatch
 ):
     """Two threads that both read a stack size of 0 as the one to put back, and the first to finish
     puts back the big one: every thread of the process from then on gets 256 MiB of address space."""
@@ -1444,18 +1502,18 @@ def test_first_calls_that_come_together_make_one_worker_and_leave_the_stack_size
             super().__init__(*args, **kwargs)
 
     monkeypatch.setattr(llama_cpp, "ThreadPoolExecutor", Slow)
-    before = threading.stack_size()
     together = threading.Barrier(4)
 
     def first_call():
         together.wait()
-        return llama_cpp._tokenizer_pool()
+        return own_tokenizer_worker.pool()
 
     with ThreadPoolExecutor(max_workers=4) as callers:
         pools = [result.result() for result in [callers.submit(first_call) for _ in range(4)]]
     assert len(made) == 1
     assert pools == [made[0]] * 4
-    assert threading.stack_size() == before
+    assert stack_sizes.set == [llama_cpp.TOKENIZER_STACK, 0]
+    assert stack_sizes.now == 0
 
 
 @pytest.mark.parametrize(
@@ -1466,7 +1524,7 @@ def test_first_calls_that_come_together_make_one_worker_and_leave_the_stack_size
     ],
 )
 def test_a_platform_that_refuses_the_stack_size_tokenizes_on_the_calling_thread(
-    runtime, own_tokenizer_thread, monkeypatch, error
+    runtime, own_tokenizer_worker, monkeypatch, caplog, error
 ):
     def refuse(size=0):
         raise error
@@ -1474,25 +1532,94 @@ def test_a_platform_that_refuses_the_stack_size_tokenizes_on_the_calling_thread(
     monkeypatch.setattr(llama_cpp.threading, "stack_size", refuse)
     threads = watch_tokenizing_threads(runtime)
     session = load(runtime)
-    assert session.tokenize("abc") == [97, 98, 99]
-    assert threads == [threading.current_thread()]
+    with caplog.at_level(logging.WARNING, logger=llama_cpp.LOGGER.name):
+        assert session.tokenize("abc") == [97, 98, 99]
+        assert session.tokenize("abc") == [97, 98, 99]
+    assert threads == [threading.current_thread()] * 2
+    # One warning, not one per call, and it says what is lost and why:
+    [warning] = caplog.records
+    assert warning.levelno == logging.WARNING
+    assert "calling thread" in warning.getMessage()
+    assert "256 MiB" in warning.getMessage()
+    assert str(error) in warning.getMessage()
+    assert "20,000" in warning.getMessage()
 
 
 def test_a_thread_that_cannot_start_is_no_reason_to_lose_the_tokenizer(
-    runtime, own_tokenizer_thread, monkeypatch
+    runtime, own_tokenizer_worker, stack_sizes, monkeypatch, caplog
 ):
-    before = threading.stack_size()
-
     class NoRoom(ThreadPoolExecutor):
+        shut_down = 0
+
         def submit(self, function, /, *args, **kwargs):
             raise RuntimeError("can't start new thread")
+
+        def shutdown(self, *args, **kwargs):
+            NoRoom.shut_down += 1
+            super().shutdown(*args, **kwargs)
 
     monkeypatch.setattr(llama_cpp, "ThreadPoolExecutor", NoRoom)
     threads = watch_tokenizing_threads(runtime)
     session = load(runtime)
-    assert session.tokenize("abc") == [97, 98, 99]
+    with caplog.at_level(logging.WARNING, logger=llama_cpp.LOGGER.name):
+        assert session.tokenize("abc") == [97, 98, 99]
     assert threads == [threading.current_thread()]
-    assert threading.stack_size() == before  # put back although no thread started
+    assert stack_sizes.now == 0  # put back although no thread started
+    assert NoRoom.shut_down == 1  # the executor that never got its worker is not kept
+    assert "can't start new thread" in caplog.text
+
+
+def test_a_refusal_is_not_remembered_the_next_call_tries_again_and_the_warning_comes_once(
+    runtime, own_tokenizer_worker, no_big_stack, caplog
+):
+    threads = watch_tokenizing_threads(runtime)
+    session = load(runtime)
+    with caplog.at_level(logging.WARNING, logger=llama_cpp.LOGGER.name):
+        session.tokenize("abc")
+        session.tokenize("abc")
+        assert no_big_stack.attempts == 2  # not cached: asked again under the lock
+        no_big_stack.refuse = False  # the system has room now
+        assert session.tokenize("abc") == [97, 98, 99]
+        session.tokenize("abc")
+    assert no_big_stack.attempts == 3  # and once it is made it is kept
+    assert threads[0] is threads[1] is threading.current_thread()
+    assert threads[2] is threads[3] is not threading.current_thread()
+    assert threads[2].name.startswith("rizzo-tokenizer")
+    assert len(caplog.records) == 1
+
+
+LONG = llama_cpp.LONG_RUN
+
+
+@pytest.mark.parametrize(
+    "character",
+    ["a", "7", "!", "_", " ", "\n", "\N{CJK UNIFIED IDEOGRAPH-6F22}"],
+    ids=["letter", "digit", "punctuation", "underscore", "space", "newline", "cjk"],
+)
+def test_without_the_big_stack_a_long_run_is_refused_and_one_that_is_not_so_long_is_not(
+    runtime, own_tokenizer_worker, no_big_stack, character
+):
+    session = load(runtime)
+    assert len(session.tokenize(character * LONG)) == LONG * len(character.encode())
+    with pytest.raises(
+        ValueError, match="cannot give the tokenizer the 256 MiB thread stack"
+    ) as raised:
+        session.tokenize(character * (LONG + 1))
+    assert "more than 20,000" in str(raised.value)
+    assert len(runtime.calls("llama_tokenize")) == 1  # the refused one never reached libllama
+
+
+def test_without_the_big_stack_text_without_a_long_run_is_tokenized_whatever_its_length(
+    runtime, own_tokenizer_worker, no_big_stack
+):
+    session = load(runtime)
+    for text in ["ab " * 30_000, "a!" * 30_000, "a" * 15_000 + "!" + "a" * 15_000]:
+        assert session.tokenize(text) == list(text.encode())
+
+
+def test_with_the_big_stack_a_long_run_is_tokenized(runtime, own_tokenizer_worker):
+    session = load(runtime)
+    assert len(session.tokenize("a" * 255_000)) == 255_000
 
 
 # --- the session: compute -----------------------------------------------------------------------

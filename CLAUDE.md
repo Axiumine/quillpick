@@ -120,12 +120,18 @@ inferenza: liberarne il contesto sotto di lui sarebbe un use after free).
   esplicitamente non viene mai declassata), un solo device (`split_mode NONE`, lista `devices`),
   log di llama.cpp filtrati a warning/errori (`RIZZO_LLAMA_LOG=1` per vederli tutti).
   **`llama_tokenize` gira su un thread dedicato con 256 MiB di stack** (`TOKENIZER_STACK`; un solo
-  worker che vive quanto il processo, creato sotto lock): il pre-tokenizer di llama.cpp usa
-  `std::regex`, che ricorre una volta per carattere di una sequenza di lettere, punteggiatura o CJK, e
-  circa 26.200 caratteri ripetuti esauriscono gli 8 MiB di stack di un thread Linux (SIGSEGV: muore il
-  processo, non la richiesta) mentre uno `state` può pesare 256 KB. Misurato: 64 MiB non bastano,
-  128 MiB reggono 250.000 caratteri (test opt-in in `test_llama_real.py`); dove la piattaforma non
-  concede uno stack così, si tokenizza nel thread chiamante come prima.
+  worker che vive quanto il processo, creato sotto lock): lunghe sequenze di lettere, punteggiatura o
+  caratteri CJK esauriscono lo stack di un thread comune dentro `llama_tokenize` (SIGSEGV: muore il
+  processo, non la richiesta) mentre uno `state` può pesare 256 KB. Misurato con llama.cpp b11081
+  (pacchetto CUDA) su Linux x86-64, con gli 8 MiB di default: la lettera 'a' si ferma intorno a
+  26.000 caratteri ripetuti (il processo muore anche con 40.000 '!' o 40.000 caratteri CJK) e l'uso di stack cresce in modo
+  lineare, circa 320 byte per carattere, coerente con una ricorsione nell'espressione regolare del
+  pre-tokenizer (non è stato preso un backtrace). 64 MiB non bastano, 128 MiB reggono 250.000
+  caratteri (test opt-in in `test_llama_real.py`). Windows e macOS non sono stati provati. Se la
+  piattaforma non concede lo stack (`ulimit -v` basso, nessun posto per il thread) si scrive **un solo
+  avviso** nel log, il tentativo si ripete alla chiamata dopo (un fallimento non resta in cache) e,
+  nel frattempo, si tokenizza nel thread chiamante rifiutando con `ValueError` (HTTP 422) ogni
+  sequenza di più di 20.000 caratteri dello stesso tipo (`LONG_RUN`).
   `Library.open` tiene un'istanza per cartella *risolta* del runtime (un pacchetto può annidare la
   libreria di un livello: due nomi per lo stesso runtime non ne caricano due copie, e i backend ggml
   si registrano globalmente); `Session.load` valida `--kv-type` e prepara tutti i parametri prima di

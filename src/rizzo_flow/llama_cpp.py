@@ -6,8 +6,9 @@ by value, so a library built from another commit can crash instead of failing cl
 """
 
 import ctypes
-import functools
+import logging
 import os
+import re
 import sys
 import threading
 from collections.abc import Callable
@@ -41,12 +42,19 @@ DEVICE_KINDS = {0: "cpu", 1: "gpu", 2: "igpu", 3: "accel", 4: "meta"}
 KV_TYPES = {"f16": 1, "q8_0": 8, "q4_0": 2}
 SPLIT_MODE_NONE = 0
 LOG_LEVEL_WARN, LOG_LEVEL_ERROR = 3, 4
-# llama.cpp matches its pre-tokenizer patterns with std::regex, which recurses once per character
-# of a run (letters, punctuation, spaces, CJK): about 26,200 repeated characters overflow the 8 MiB
-# stack of a Linux thread (those of Windows and macOS are smaller), and the SIGSEGV ends the whole
-# process, not the request. The state of a request may be 256 KB, so llama_tokenize runs on a
-# thread of its own with a stack to match.
+# Long runs of letters, punctuation or CJK characters (a run of whitespace as well) overflow the
+# stack that llama_tokenize gets on an ordinary thread, and the SIGSEGV ends the whole process, not
+# the request. Measured with llama.cpp b11081 (CUDA package) on x86-64 Linux, on the 8 MiB default
+# stack of a thread: the letter 'a' stops at about 26,000 repeated characters, and the stack use
+# grew linearly, about 320 bytes per character, which is consistent with recursion in the
+# pre-tokenizer's regular expression (no backtrace was taken). Stacks on Windows and macOS were not
+# measured. The state of a request may be 256 KB, so llama_tokenize runs on a thread of its own
+# with a stack to match.
 TOKENIZER_STACK = 256 * 1024**2  # measured: 64 MiB is not enough, 128 MiB holds 250,000 characters
+# Where that thread cannot be had, a run longer than this is refused instead of tokenized on a stack
+# that may not hold it: some margin under the measured 26,000, and far above any real text.
+LONG_RUN = 20_000
+LOGGER = logging.getLogger(__name__)
 
 
 class ModelParams(ctypes.Structure):
@@ -346,31 +354,62 @@ def _matches(device: Device, needle: str) -> bool:
     )
 
 
-@functools.cache
-def _make_tokenizer_pool() -> ThreadPoolExecutor | None:
-    """The one thread that runs llama_tokenize, or None where the platform gives no such stack."""
-    try:
+# A run is characters of one kind: letters and digits, punctuation and symbols (the underscore
+# included), or whitespace. This is wider than the pre-tokenizer's own pieces on purpose.
+_LONG_RUN = re.compile(
+    rf"[^\W_]{{{LONG_RUN + 1},}}|(?:[^\w\s]|_){{{LONG_RUN + 1},}}|\s{{{LONG_RUN + 1},}}"
+)
+
+
+class _TokenizerWorker:
+    """The one thread that runs llama_tokenize, made when first needed and kept as long as the
+    process lives; None where the platform cannot give it the stack.
+
+    A failure is not remembered: a thread that cannot start now (no address space left for a
+    stack this big) may start later, so the next call tries again. It is logged once, not per
+    call. Everything runs under one lock, which also keeps the stack size that is set while the
+    worker starts from leaking into a thread that another caller starts at the same time."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._pool: ThreadPoolExecutor | None = None
+        self._warned = False
+
+    def pool(self) -> ThreadPoolExecutor | None:
+        with self._lock:
+            if self._pool is None:
+                try:
+                    self._pool = self._start()
+                except (ValueError, RuntimeError) as error:
+                    if not self._warned:
+                        self._warned = True
+                        LOGGER.warning(
+                            "llama_tokenize runs on the calling thread: no thread with a %d MiB "
+                            "stack could be started (%s). Text with a run of more than %s "
+                            "letters, punctuation or whitespace characters is refused until one "
+                            "can.",
+                            TOKENIZER_STACK // 1024**2,
+                            error,
+                            f"{LONG_RUN:,}",
+                        )
+            return self._pool
+
+    @staticmethod
+    def _start() -> ThreadPoolExecutor:
+        # ValueError or RuntimeError here: a size the platform refuses, or a fixed one
         previous = threading.stack_size(TOKENIZER_STACK)
-    except (ValueError, RuntimeError):  # a size the platform refuses, or a fixed one
-        return None
-    pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="rizzo-tokenizer")
-    try:
-        pool.submit(int).result()  # the worker starts now, while the size is set
-    except RuntimeError:  # no room for a stack that big
-        return None
-    finally:
-        threading.stack_size(previous)
-    return pool
+        pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="rizzo-tokenizer")
+        try:
+            pool.submit(int).result()  # the worker starts now, while the size is set
+        except RuntimeError:  # no room for a stack that big
+            pool.shutdown(wait=False)
+            raise
+        finally:
+            threading.stack_size(previous)
+        return pool
 
 
-_TOKENIZER_LOCK = threading.Lock()
-
-
-def _tokenizer_pool() -> ThreadPoolExecutor | None:
-    """`_make_tokenizer_pool`, run by one thread at a time: functools.cache lets two first calls
-    both run it, which would make two workers and leave the stack size of every new thread set."""
-    with _TOKENIZER_LOCK:
-        return _make_tokenizer_pool()
+_TOKENIZER = _TokenizerWorker()
 
 
 class Session:
@@ -463,12 +502,18 @@ class Session:
     # --- text -----------------------------------------------------------------------------
 
     def tokenize(self, text: str, add_special: bool = False) -> list[int]:
+        pool = _TOKENIZER.pool()
+        if pool is None and _LONG_RUN.search(text):
+            raise ValueError(
+                f"A run of more than {LONG_RUN:,} letters, punctuation or whitespace characters "
+                f"cannot be tokenized here: this system cannot give the tokenizer the "
+                f"{TOKENIZER_STACK // 1024**2} MiB thread stack that takes"
+            )
         raw = text.encode("utf-8")
         capacity = len(raw) + 8  # a token covers at least one byte
         buffer = (c_int32 * capacity)()
         # parse_special: control tokens written in the template text become their own ids.
         arguments = (self.vocab, raw, len(raw), buffer, capacity, add_special, True)
-        pool = _tokenizer_pool()
         if pool is None:
             count = self.library.llama_tokenize(*arguments)
         else:

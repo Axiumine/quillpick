@@ -84,8 +84,9 @@ def test_prompt_matches_the_original_checkpoint(backend):
     ],
 )
 def test_a_run_of_text_as_long_as_a_request_may_be_is_tokenized_not_a_crash(backend, text):
-    """llama.cpp recurses once per character of a run: on the 8 MiB stack of an ordinary thread
-    about 26,200 repeated characters end the whole process with SIGSEGV; a state may be 256 KB."""
+    """Long runs of letters, punctuation or CJK characters overflow the 8 MiB stack of an ordinary
+    thread inside llama_tokenize and end the whole process with SIGSEGV (about 26,000 'a' on x86-64
+    Linux with llama.cpp b11081, CUDA package); a state may be 256 KB."""
     ids = backend.tokenizer.encode(text)
     assert 0 < len(ids) <= len(text.encode())
 
