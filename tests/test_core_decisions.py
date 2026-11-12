@@ -154,11 +154,16 @@ def test_softmax_rejects_a_bad_temperature(temperature):
 
 
 @pytest.mark.parametrize(
-    "logits", [[], [1.0], [0.0, math.nan], [math.inf, 0.0], [0.0, -math.inf], [math.nan] * 3]
+    "logits", [[], [0.0, math.nan], [math.inf, 0.0], [0.0, -math.inf], [math.nan] * 3, [math.nan]]
 )
-def test_softmax_needs_two_or_more_finite_logits(logits):
-    with pytest.raises(ValueError, match=exactly("At least two finite logits are required")):
+def test_softmax_needs_one_or_more_finite_logits(logits):
+    with pytest.raises(ValueError, match=exactly("At least one finite logit is required")):
         softmax(logits)
+
+
+def test_softmax_of_a_single_logit_is_certain():
+    # A choice with one option and no abstention has a single candidate: certain by construction.
+    assert softmax([3.5]) == [1.0]
 
 
 # summarize -------------------------------------------------------------------------------

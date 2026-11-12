@@ -49,7 +49,7 @@ Type-specific fields:
 | Type | Fields | Limits |
 | --- | --- | --- |
 | `boolean` | `true_description`, `false_description` (optional, default "Yes. The evidence supports…") | — |
-| `choice` | `options: [{"id": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$", "description": "…"}]` | 2–26, unique ids; 25 with abstention |
+| `choice` | `options: [{"id": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$", "description": "…"}]` | 1–26, unique ids; 25 with abstention (one option plus abstention is still a decision) |
 | `score` | `levels: ["lowest…", …, "highest…"]` | 2–26 distinct; 25 with abstention |
 | `numeric` | `unit: "…"`, `anchors: [{"value": number, "description": "…"}]` strictly increasing | 2–24 without abstention, 23 with |
 
@@ -125,7 +125,7 @@ ASCII, the server refuses to start with another).
 
 - `instructions` and criteria values may be strings, objects or arrays (objects are serialized as
   canonical JSON).
-- `choice`: 2–26 free-form keys; the value is a description or `null` (the key alone is shown).
+- `choice`: 1–26 free-form keys; the value is a description or `null` (the key alone is shown). A single key is answered with probability 1 and `confidence` 1.
 - `score`: 2–10 ordered levels.
 - No abstention and no numeric type in this format. Unknown top-level fields are ignored; unknown
   fields inside a question → 422.

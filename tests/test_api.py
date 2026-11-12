@@ -513,7 +513,7 @@ class FaultyBackend(StubBackend):
 
 FAULTS = {
     "decode": "llama_decode returned -3: compute error",
-    "nan": "At least two finite logits are required",
+    "nan": "At least one finite logit is required",
     "short": "Logit count does not match the declared candidates",
 }
 

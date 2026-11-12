@@ -41,7 +41,7 @@ def test_numeric_real_anchors_and_nonuniform_spacing():
 
 @pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf")])
 def test_no_nonfinite_numbers(bad):
-    with pytest.raises(ValueError, match="At least two finite logits"):
+    with pytest.raises(ValueError, match="At least one finite logit"):
         softmax([0, bad])
     with pytest.raises(ValidationError):
         question(

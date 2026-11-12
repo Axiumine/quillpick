@@ -147,7 +147,9 @@ Un client scritto per l'API ospitata può puntare qui cambiando soltanto l'URL d
 - `model` accetta `rizzo-latest`, l'ID locale (es. `rizzo-spark-x2.5-4b-q8`) e qualunque nome `jev-*`
   come alias di comodo. La risposta riporta sempre l'ID locale: nessuna risposta si presenta come Jev.
 - Le domande sono tradotte nelle primitive native con `allow_abstain: false`, perché il formato
-  non prevede astensione. `noul` è la probabilità di "sì" tra due sole opzioni.
+  non prevede astensione. `noul` è la probabilità di "sì" tra due sole opzioni. Una `choice` con un solo
+  criterio ottiene quindi probabilità 1 e `confidence` 1 (invece di un 422): chi scrive per l'API ospitata
+  può mandare domande di questo tipo.
 - `confidence = (n × p_max − 1) / (n − 1)`, la statistica mostrata nella pagina Confidence di TypeSafe.
   La formula esatta di Jev non è pubblica. Descrive la forma della distribuzione: non è calibrata.
   Sul checkpoint Spark le distribuzioni sono spesso molto concentrate (0.9999): senza temperature
@@ -177,7 +179,7 @@ Un client scritto per l'API ospitata può puntare qui cambiando soltanto l'URL d
 | Tipo | Input specifico | Output principale |
 | --- | --- | --- |
 | `boolean` | Descrizioni opzionali di vero e falso | `value` booleano e probabilità di vero condizionata alla disponibilità |
-| `choice` | `options` con ID e descrizioni | `choice`, probabilità di ciascuna opzione |
+| `choice` | `options` con ID e descrizioni, da 1 a 26 | `choice`, probabilità di ciascuna opzione |
 | `score` | `levels` ordinati, da basso ad alto | Media dei livelli, `normalized_score`, dispersione |
 | `numeric` | `anchors` crescenti con valore e descrizione, `unit` | Media delle ancore, mediana, dispersione, probabilità fuori scala |
 
@@ -186,6 +188,8 @@ Gli ID delle domande non sono inviati al modello. Le descrizioni devono essere a
 Massimo 64 domande per richiesta. Ogni candidato, speciali inclusi, è una lettera maiuscola a token
 singolo verificata con il tokenizer ufficiale: 26 slot in tutto. Quindi 26 opzioni o livelli con
 `allow_abstain: false`, 25 con l'astensione (default); per `numeric` 24 ancore, 23 con l'astensione.
+Una `choice` con una sola opzione resta una decisione con l'astensione attiva (quell'opzione oppure
+`__insufficient__`); senza astensione la risposta è certa per costruzione.
 
 ```json
 {

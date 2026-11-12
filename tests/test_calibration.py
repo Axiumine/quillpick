@@ -73,7 +73,7 @@ def test_the_label_must_index_a_candidate():
 @pytest.mark.parametrize("logits", [[0.0, math.nan], [math.inf, 0.0], [0.0, -math.inf]])
 def test_logits_must_be_finite(logits):
     bad = rows("choice", [0.0, 1.0], [0, 1] * 5) + rows("choice", logits, [0])
-    with pytest.raises(ValueError, match=exactly("At least two finite logits are required")):
+    with pytest.raises(ValueError, match=exactly("At least one finite logit is required")):
         fit_temperature(bad, "fp")
 
 

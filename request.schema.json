@@ -84,7 +84,7 @@
             "$ref": "#/$defs/Option"
           },
           "maxItems": 26,
-          "minItems": 2,
+          "minItems": 1,
           "title": "Options",
           "type": "array"
         }

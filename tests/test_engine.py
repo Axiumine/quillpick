@@ -247,8 +247,8 @@ def test_a_value_error_of_the_runtime_is_a_backend_error():
 @pytest.mark.parametrize(
     ("logits", "message"),
     [
-        ([math.nan, 1.0, 2.0], "At least two finite logits are required"),
-        ([math.inf, 1.0, 2.0], "At least two finite logits are required"),
+        ([math.nan, 1.0, 2.0], "At least one finite logit is required"),
+        ([math.inf, 1.0, 2.0], "At least one finite logit is required"),
         ([1.0], "Logit count does not match the declared candidates"),
     ],
     ids=["nan", "inf", "missing-row"],

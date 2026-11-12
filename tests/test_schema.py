@@ -204,10 +204,11 @@ def test_choice_needs_unique_ids():
     assert value_errors(lambda: ChoiceQuestion.model_validate(payload)) == [UNIQUE_IDS]
 
 
-def test_choice_needs_between_two_and_26_options():
+def test_choice_needs_between_one_and_26_options():
+    ChoiceQuestion.model_validate(choice(1))
     ChoiceQuestion.model_validate(choice(2))
-    with pytest.raises(ValidationError, match="at least 2 items"):
-        ChoiceQuestion.model_validate(choice(1))
+    with pytest.raises(ValidationError, match="at least 1 item"):
+        ChoiceQuestion.model_validate(choice(0))
     with pytest.raises(ValidationError, match="at most 26 items"):
         ChoiceQuestion.model_validate(choice(27, abstain=False))
 

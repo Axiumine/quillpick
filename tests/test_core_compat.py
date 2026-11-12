@@ -59,7 +59,7 @@ def test_choice_option_keys_with_inner_spaces_are_fine():
     assert list(parsed.criteria) == ["Billing team", "é"]
 
 
-@pytest.mark.parametrize(("kind", "low", "high"), [("choice", 2, 26), ("score", 2, 10)])
+@pytest.mark.parametrize(("kind", "low", "high"), [("choice", 1, 26), ("score", 2, 10)])
 def test_criteria_size_limits(kind, low, high):
     def build(count: int) -> Any:
         criteria: Any = {f"k{i}": None for i in range(count)} if kind == "choice" else ["l"] * count

@@ -83,10 +83,12 @@ def test_single_option_is_still_a_decision_with_abstention(payload):
     payload["questions"] = {"route": payload["questions"]["route"]}
     payload["questions"]["route"]["options"] = [{"id": "access", "description": "Login problem"}]
     answer = Engine(FakeBackend()).decide(payload)["answers"]["route"]
-    assert answer["status"] == "insufficient_evidence" and answer["choice"] is None
+    assert answer["status"] == "insufficient_evidence"
+    assert answer["choice"] is None
     payload["questions"]["route"]["policy"] = {"allow_abstain": False}
     answer = Engine(FakeBackend()).decide(payload)["answers"]["route"]
-    assert answer["choice"] == "access" and answer["probabilities"]["access"] == pytest.approx(1)
+    assert answer["choice"] == "access"
+    assert answer["probabilities"]["access"] == pytest.approx(1)
     assert answer["uncertainty"]["concentration"] == 1
 
 

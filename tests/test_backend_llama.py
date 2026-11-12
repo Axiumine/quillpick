@@ -127,6 +127,16 @@ def test_a_single_question_takes_one_pass_even_in_shared_mode():
     assert timing["batches"] == 1
 
 
+@pytest.mark.parametrize("mode", ["shared", "direct"])
+def test_a_question_with_one_candidate_reads_one_logit(mode):
+    # A choice with a single option and no abstention has one answer letter: one logit, no padding.
+    prefix = [100, 101]
+    jobs = [job("one", prefix, [1], slots=(65,)), job("two", prefix, [2, 3])]
+    logits, _ = backend().score(prefix, jobs, mode)
+    assert len(logits["one"]) == 1
+    assert len(logits["two"]) == 2
+
+
 def test_inputs_longer_than_one_call_are_fed_in_slices(monkeypatch):
     monkeypatch.setattr(backend_llama, "N_BATCH", 4)
     prefix = list(range(10))
