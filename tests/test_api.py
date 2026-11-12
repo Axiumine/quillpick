@@ -298,10 +298,10 @@ def test_a_state_nested_beyond_what_pydantic_follows_is_a_422_on_every_platform(
     assert backend.calls == []
 
 
-def test_the_native_route_and_health_do_not_ask_for_the_key():
+def test_health_and_the_pages_do_not_ask_for_the_key():
     client, _ = make_client(api_key="secret")
-    assert client.get("/health").status_code == 200
-    assert client.post("/v1/decisions", json=native_body()).status_code == 200
+    for path in ("/health", "/playground", "/snake", "/playground/logo.png"):
+        assert client.get(path).status_code == 200, path
 
 
 @pytest.mark.parametrize(
@@ -399,29 +399,32 @@ def test_systemone_validation_errors_are_a_list():
         {"Authorization": "Bearer  secret"},
     ],
 )
-def test_a_missing_or_wrong_key_is_a_401_on_the_compatible_routes(headers):
+def test_a_missing_or_wrong_key_is_a_401_on_every_model_route(headers):
     client, backend = make_client(api_key="secret")
     for response in (
         client.get("/v1/models", headers=headers),
         client.post("/v1/systemone", json=wire_body(), headers=headers),
+        client.post("/v1/decisions", json=native_body(), headers=headers),
     ):
         assert response.status_code == 401
         assert response.json() == {"detail": "Missing or invalid API key"}
     assert backend.calls == []
 
 
-def test_the_right_key_opens_the_compatible_routes():
+def test_the_right_key_opens_every_model_route():
     client, _ = make_client(api_key="secret")
     headers = {"Authorization": "Bearer secret"}
     assert client.get("/v1/models", headers=headers).status_code == 200
     assert client.post("/v1/systemone", json=wire_body(), headers=headers).status_code == 200
+    assert client.post("/v1/decisions", json=native_body(), headers=headers).status_code == 200
 
 
-def test_authorization_is_checked_before_the_body():
+@pytest.mark.parametrize("path", ["/v1/systemone", "/v1/decisions"])
+def test_authorization_is_checked_before_the_body(path):
     client, _ = make_client(api_key="secret")
-    assert client.post("/v1/systemone", json={}).status_code == 401
+    assert client.post(path, json={}).status_code == 401
     good = {"Authorization": "Bearer secret"}
-    assert client.post("/v1/systemone", json={}, headers=good).status_code == 422
+    assert client.post(path, json={}, headers=good).status_code == 422
 
 
 def test_without_a_key_the_compatible_routes_are_open():

@@ -107,7 +107,8 @@ Pagina singola senza dipendenze esterne, servita dallo stesso processo.
 Con il server avviato: <http://127.0.0.1:8017/snake>. Ogni mossa del serpente è una richiesta
 `POST /v1/decisions` (una domanda `choice` con le mosse legali); le probabilità del modello
 compaiono in tempo reale sulle celle candidate, con barre, logit, tempi e registro delle
-decisioni. Zero token generati. **Registra GIF** cattura griglia e pannello delle decisioni
+decisioni. Zero token generati. Se il server usa `RIZZO_API_KEY`, la chiave va scritta nel campo API key sotto
+i controlli. **Registra GIF** cattura griglia e pannello delle decisioni
 direttamente nella pagina (encoder GIF89a scritto a mano, nessuna dipendenza) e, quando la fermi,
 salva il file nei download.
 
@@ -163,7 +164,9 @@ Un client scritto per l'API ospitata può puntare qui cambiando soltanto l'URL d
   non deve passare in silenzio.
 - `x_rizzo` (tempi, fingerprint, stato delle probabilità) è un'estensione fuori dal contratto.
 - Autenticazione Bearer come l'originale, attiva solo se è impostata `RIZZO_API_KEY`
-  (altrimenti l'header è ignorato; solo ASCII: con un'altra chiave il server non parte). Errori: 401
+  (altrimenti l'header è ignorato; solo ASCII: con un'altra chiave il server non parte); protegge anche
+  l'endpoint nativo `POST /v1/decisions`, mentre `/health` e le pagine restano aperti (playground e
+  Snake hanno un campo per la chiave). Errori: 401
   (chiave mancante o errata); 422 (richiesta non valida o oltre un limite, una lone surrogate come
   l'escape JSON `"\ud800"` — JSON valido, ma UTF-8 non la sa codificare — o un corpo mandato senza
   `Content-Type` JSON); 400 (`{"error_type": "api_usage_error"}`) per un nome di modello che questo

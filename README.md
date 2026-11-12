@@ -193,7 +193,9 @@ for the original file (`rizzo-latest` always works).
 `--port`, `--host`, `--batch-size` (question micro-batch, default 4), `--ctx` (token limit per
 question, default 8192), `--threads` (CPU), `--model /path/to/file.gguf` (overrides `--size`),
 `--calibration fit.json`. Set `RIZZO_API_KEY=...` (ASCII) before starting for Bearer auth on the
-Jev-compatible endpoints. The model loads in about 10 seconds.
+model endpoints: `POST /v1/decisions`, `POST /v1/systemone` and `GET /v1/models` (`/health` and the
+pages stay open; the playground and the Snake page have an API key field). The model loads in about
+10 seconds.
 
 Quantization changes probabilities, and so does the hardware (CUDA, Vulkan and Metal round
 differently): compare on your own workload, and note that a calibration is bound to the runtime,
@@ -468,7 +470,7 @@ the real SDK). **The interface is compatible, the model is not Jev:**
   letter. Beyond that, split the question into two stages.
 - `x_rizzo` (timings, fingerprint) is an extension outside the contract.
 - Bearer auth like the original, enforced only if `RIZZO_API_KEY` is set (ASCII only: the server
-  refuses to start with another key). Errors: 401 (missing or wrong key); 422 (invalid request or
+  refuses to start with another key); it also protects the native `POST /v1/decisions`. Errors: 401 (missing or wrong key); 422 (invalid request or
   over a limit, a lone surrogate such as the JSON escape `"\ud800"` — valid JSON, but UTF-8 cannot
   encode it — or a body sent without a JSON `Content-Type`); 400
   (`{"error_type": "api_usage_error"}`) for a model name this server does not answer for; and 503
@@ -519,7 +521,8 @@ precision is answering. Bilingual: switch **IT / EN** in the header.
 <http://127.0.0.1:8017/snake> is a Snake game where **every move is one `POST /v1/decisions`
 request**: the state describes the board, a `choice` question lists the legal moves, and the model's
 answer-letter probabilities are drawn live on the candidate cells, next to bars, logits, timings
-and a decision log. No text is generated. **Record GIF** captures the board plus the decision
+and a decision log. No text is generated. If the server sets `RIZZO_API_KEY`, type the key in the
+API key field under the controls. **Record GIF** captures the board plus the decision
 panel in the page itself (hand-written GIF89a encoder, no dependencies) and saves the file to your
 downloads when you stop.
 

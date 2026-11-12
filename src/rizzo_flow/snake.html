@@ -43,7 +43,7 @@ h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: v
 .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .row.between { justify-content: space-between; }
 select, input[type=range] { accent-color: var(--accent); }
-select { background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; font: 13px var(--sans); max-width: 100%; }
+select, input[type=password] { background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; font: 13px var(--sans); max-width: 100%; }
 select:focus, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 button { font: 13px var(--sans); border: 1px solid var(--line); background: var(--panel); color: var(--ink);
   padding: 6px 11px; border-radius: 7px; cursor: pointer; }
@@ -68,7 +68,7 @@ canvas { width: 100%; height: 100%; display: block; border-radius: 10px; border:
 .controls label { display: block; font-size: 12px; color: var(--muted); }
 .controls label.check { display: flex; gap: 7px; align-items: flex-start; color: var(--ink); font-size: 13px; cursor: pointer; }
 .controls label.check small { display: block; color: var(--muted); font-size: 11.5px; }
-.controls select, .controls input[type=range] { width: 100%; margin-top: 3px; }
+.controls select, .controls input[type=range], .controls input[type=password] { width: 100%; margin-top: 3px; box-sizing: border-box; }
 .hint { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
 .error { background: var(--bad-soft); color: var(--bad); border-radius: 8px; padding: 9px 11px; margin-top: 10px;
   font: 12.5px/1.5 var(--mono); white-space: pre-wrap; word-break: break-word; }
@@ -164,6 +164,10 @@ footer a { color: inherit; }
         <label for="hold"><span data-i18n="holdLabel"></span> <span id="holdValue" class="pill"></span></label>
         <input id="hold" type="range" min="0" max="1000" step="50" value="150">
       </div>
+      <div>
+        <label for="apikey" data-i18n="apiKeyLabel"></label>
+        <input id="apikey" type="password" autocomplete="off">
+      </div>
       <label class="check"><input id="shuffle" type="checkbox" checked><span><span data-i18n="shuffle"></span><small data-i18n="shuffleHint"></small></span></label>
       <label class="check"><input id="net" type="checkbox"><span><span data-i18n="net"></span><small data-i18n="netHint"></small></span></label>
       <label class="check"><input id="extra" type="checkbox"><span><span data-i18n="extra"></span><small data-i18n="extraHint"></small></span></label>
@@ -212,7 +216,7 @@ const I18N = {
     checking: "verifica…", offline: "offline", game: "Partita", decision: "Decisione del modello", timing: "Tempi dell'ultima decisione",
     start: "Avvia", pause: "Pausa", resume: "Riprendi", step: "1 mossa", stepTitle: "Chiede al modello una sola decisione", reset: "Nuova partita",
     boardLabel: "Griglia di gioco", viewLabel: "Cosa vede il modello (state)", viewSensors: "Sensori per mossa", viewBoth: "Sensori + griglia ASCII", viewGrid: "Solo griglia ASCII (difficile)",
-    sizeLabel: "Dimensione griglia", holdLabel: "Pausa dopo ogni decisione",
+    sizeLabel: "Dimensione griglia", apiKeyLabel: "API key (solo se il server usa RIZZO_API_KEY)", holdLabel: "Pausa dopo ogni decisione",
     shuffle: "Mescola l'ordine delle opzioni", shuffleHint: "Le lettere A/B/C cambiano a ogni mossa: attenua il bias di posizione.",
     net: "Rete di sicurezza", netHint: "Se il modello sceglie una mossa letale, si usa la mossa sicura più probabile. Ogni intervento è segnato nel log.",
     extra: "Domanda extra: pericolo", extraHint: "Una seconda domanda (score) sullo stesso state: prefill condiviso, un microbatch.",
@@ -241,7 +245,7 @@ const I18N = {
     checking: "checking…", offline: "offline", game: "Game", decision: "Model decision", timing: "Timing of the last decision",
     start: "Start", pause: "Pause", resume: "Resume", step: "1 move", stepTitle: "Ask the model for a single decision", reset: "New game",
     boardLabel: "Game board", viewLabel: "What the model sees (state)", viewSensors: "Per-move sensors", viewBoth: "Sensors + ASCII grid", viewGrid: "ASCII grid only (hard)",
-    sizeLabel: "Grid size", holdLabel: "Pause after each decision",
+    sizeLabel: "Grid size", apiKeyLabel: "API key (only if the server sets RIZZO_API_KEY)", holdLabel: "Pause after each decision",
     shuffle: "Shuffle option order", shuffleHint: "Letters A/B/C change every move: dampens position bias.",
     net: "Safety net", netHint: "If the model picks a lethal move, the most probable safe move is used. Every intervention is marked in the log.",
     extra: "Extra question: danger", extraHint: "A second (score) question on the same state: shared prefill, one micro-batch.",
@@ -412,7 +416,9 @@ async function decide() {
   const started = performance.now();
   let json;
   try {
-    const res = await fetch("/v1/decisions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(game.pending.body) });
+    const headers = { "content-type": "application/json" };
+    if ($("#apikey").value) headers.authorization = `Bearer ${$("#apikey").value}`;
+    const res = await fetch("/v1/decisions", { method: "POST", headers, body: JSON.stringify(game.pending.body) });
     json = await res.json();
     if (!res.ok) throw new Error(typeof json.detail === "string" ? json.detail : JSON.stringify(json.detail ?? json));
   } catch (error) {

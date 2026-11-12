@@ -71,3 +71,14 @@ def test_every_key_the_page_uses_is_translated(name):
     keys = used_keys(page)
     assert len(keys) > 40  # the scan finds the page's references
     assert keys <= dictionaries(page)["en"].keys()
+
+
+@pytest.mark.parametrize("name", PAGES)
+def test_the_page_can_send_the_api_key_on_the_native_endpoint(name):
+    # With RIZZO_API_KEY set, POST /v1/decisions answers 401 without a Bearer token: a page that
+    # calls it needs a key field and has to send that field as the Authorization header.
+    page = read_page(name)
+    assert '<input id="apikey" type="password"' in page
+    assert 'data-i18n="apiKeyLabel"' in page
+    assert re.search(r"[Aa]uthorization\b.*Bearer \$\{\$\(\"#apikey\"\)\.value\}", page)
+    assert "apiKeyLabel" in dictionaries(page)["en"]

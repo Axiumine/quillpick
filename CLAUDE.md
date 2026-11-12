@@ -209,8 +209,8 @@ inferenza: liberarne il contesto sotto di lui sarebbe un use after free).
 - **Errori** (entrambi gli endpoint): 422 per validazione e limiti, lone surrogate comprese (`"\ud800"`
   è JSON valido, ma UTF-8 non lo sa codificare: `schema.require_unicode`); l'eco dell'input nel `detail`
   scrive NaN, Infinity e lone surrogate come testo e si ferma a 100 livelli di annidamento
-  (`api.MAX_ECHO_DEPTH`, `"<nested too deeply>"`). 401 solo su `/v1/systemone` e `/v1/models` (chiave
-  mancante o errata). 400 su `/v1/systemone` per un modello non servito (`{"error_type":
+  (`api.MAX_ECHO_DEPTH`, `"<nested too deeply>"`). 401 su `/v1/decisions`, `/v1/systemone` e `/v1/models` (chiave
+  mancante o errata; `/health` e le pagine restano aperti). 400 su `/v1/systemone` per un modello non servito (`{"error_type":
   "api_usage_error"}`). **503** per `engine.BackendError`: il modello ha fallito su una richiesta valida.
 - `GET /playground` (`playground.html`, pagina singola senza dipendenze esterne, servita dal
   package): builder noul/choice/score, esempi, editor JSON per entrambi gli endpoint, barre di
