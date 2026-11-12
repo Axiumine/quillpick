@@ -37,9 +37,9 @@ concurrency:
 jobs:
   analysis:
     name: Scorecard analysis
-    # Forks skip it: the action does not support them, and a fork would publish a score of its own.
-    # The repository is named here: if it is renamed or moved, update this line.
-    if: github.repository == 'Rizzo-AI-Academy/rizzo-flow'
+    # Other forks skip it: the action does not support them, and a fork would publish a score of its
+    # own. This repository is named here: if it is renamed or moved, update this line.
+    if: github.repository == 'Axiumine/quillpick'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
