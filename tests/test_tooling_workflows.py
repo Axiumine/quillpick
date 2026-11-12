@@ -36,7 +36,14 @@ def test_the_scorecard_job_runs_only_in_this_repository():
     assert "if: github.repository == 'Axiumine/quillpick'" in text
 
 
-def test_the_scorecard_badge_in_the_readme_is_this_repositorys():
-    readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    assert "api.scorecard.dev/projects/github.com/Axiumine/quillpick/badge" in readme
-    assert "scorecard.dev/viewer/?uri=github.com/Axiumine/quillpick" in readme
+def test_the_scorecard_workflow_is_manual_only():
+    # The action does not support forks, and this repository is one: no trigger but a manual one.
+    text = (ROOT / ".github" / "workflows" / "scorecard.yml").read_text(encoding="utf-8")
+    block = text.split("\non:\n", 1)[1].split("\n\n", 1)[0]
+    triggers = re.findall(r"^  ([a-z_]+):", block, re.MULTILINE)
+    assert triggers == ["workflow_dispatch"]
+
+
+@pytest.mark.parametrize("name", ["README.md", "docs/README.it.md", "docs/index.html"])
+def test_no_scorecard_badge_is_shown_until_a_score_exists(name):
+    assert "scorecard.dev" not in (ROOT / name).read_text(encoding="utf-8")

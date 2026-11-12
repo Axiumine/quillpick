@@ -3,20 +3,16 @@ name: Scorecard
 # OpenSSF Scorecard (https://scorecard.dev) checks the repository's supply-chain practices (branch
 # protection, pinned dependencies, token permissions, a security policy...) and scores each from 0
 # to 10. The results go to code scanning and, signed, to api.scorecard.dev, which serves a badge.
+#
+# Manual only. This repository is registered on GitHub as a fork, and the README of
+# ossf/scorecard-action says that running the action on a fork is not supported, so it does not run
+# on a push, on a schedule or when a branch protection rule changes. Start it by hand from the
+# Actions tab, on the default branch, to try it; the same README lists the manual trigger as
+# experimental. No score has been published, so the README carries no badge; add one only when a
+# run has produced a score.
 
 on:
-  # The action runs on the default branch only: on any other branch it fails.
-  push:
-    branches: [main]
-  # Weekly, so that the published score follows what changes without a push (Maintained,
-  # Vulnerabilities...). Off the hour: GitHub warns that scheduled runs can be delayed at busy
-  # times, the start of every hour among them. After 60 days without activity in a public
-  # repository, GitHub pauses the schedule.
-  schedule:
-    - cron: "23 5 * * 1"
-  # A change to a classic branch protection rule re-runs it; a ruleset change is picked up by the
-  # next run.
-  branch_protection_rule:
+  workflow_dispatch:
 
 # Read-only default. A job's own permissions block replaces it: the job below gets the two scopes
 # it lists and nothing else, not even contents: read (a public repository does not need it).
@@ -37,8 +33,9 @@ concurrency:
 jobs:
   analysis:
     name: Scorecard analysis
-    # Other forks skip it: the action does not support them, and a fork would publish a score of its
-    # own. This repository is named here: if it is renamed or moved, update this line.
+    # Only this repository runs it, and only when started by hand: a copy of this file in another
+    # fork would otherwise publish a score of its own. This repository is named here: if it is
+    # renamed or moved, update this line.
     if: github.repository == 'Axiumine/quillpick'
     runs-on: ubuntu-latest
     timeout-minutes: 15

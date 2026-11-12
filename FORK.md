@@ -112,10 +112,12 @@ been run with the real model or a real runtime by this fork**.
   schema file and the documents.
 - [#30](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/30), "CI: OpenSSF Scorecard workflow,
   Dependabot for the actions, README badge", by @giovannimanzoni (a contributor of this fork). The
-  workflow, the Dependabot file and the badge are pointed at `Axiumine/quillpick`, and a test checks
-  that every action is pinned to a commit. The workflow has **not run yet**: this repository is
-  registered on GitHub as a fork, and the workflow's own comment says the Scorecard action does not
-  support forks, so it may need changes after its first run.
+  workflow and the Dependabot file are pointed at `Axiumine/quillpick`, and a test checks that every
+  action is pinned to a commit. The Scorecard workflow is **manual-only** here (`workflow_dispatch`,
+  not push, schedule or branch-protection changes): this repository is registered on GitHub as a
+  fork, and the README of the Scorecard action says that running it on a fork is not supported. It
+  has **not run yet**, so it may need changes after a first run. The README badge is **not** merged:
+  there is no badge until a score exists.
 - [#32](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/32), "Document the RX 9070 XT Vulkan
   community report", by @monsterlag. Documentation only: the hardware table and the Italian README
   mention the report in [upstream issue #23](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/23)

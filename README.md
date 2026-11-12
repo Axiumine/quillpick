@@ -14,7 +14,6 @@
 
 <p>
 <a href="https://github.com/Axiumine/quillpick/actions/workflows/ci.yml"><img src="https://github.com/Axiumine/quillpick/actions/workflows/ci.yml/badge.svg" alt="CI status of Axiumine/quillpick" /></a>
-<a href="https://scorecard.dev/viewer/?uri=github.com/Axiumine/quillpick"><img src="https://api.scorecard.dev/projects/github.com/Axiumine/quillpick/badge" alt="OpenSSF Scorecard score of Axiumine/quillpick" /></a>
 <img src="https://img.shields.io/badge/100%25-LOCAL-7c3aed?style=for-the-badge" alt="100% local" />
 <img src="https://img.shields.io/badge/0-GENERATED%20TOKENS-7c3aed?style=for-the-badge" alt="0 generated tokens" />
 <img src="https://img.shields.io/badge/JEV--COMPATIBLE-API-7c3aed?style=for-the-badge" alt="Jev-compatible API" />
