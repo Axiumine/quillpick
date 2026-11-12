@@ -4,8 +4,8 @@
 
 This page says why the fork exists, what it adds to upstream and what it does not, who is credited,
 and how to keep following upstream. Everything here can be checked against the git history of this
-repository and the public pages of the upstream repository; the dates and counts were checked on
-10 November 2026.
+repository and the public pages of the upstream repository; the dates and counts were checked between
+10 and 12 November 2026.
 
 ## Why the fork exists
 
@@ -18,6 +18,9 @@ These are the facts, with dates:
   to offer the fixes, the CI and lint setup and the test suite that are in this fork, is open and has no reply
   from the maintainers; its author added one follow-up on 7 October 2026.
 
+Six of those pull requests are merged in this fork, and the others are listed below with the reason
+each is not. They stay open upstream; this fork does not close them or comment on them.
+
 So the changes below are published under another name, where people can install them and report
 problems against them. They are Apache-2.0 like the rest, and upstream can take them, in whole or in
 part, at any time. If upstream resumes, this fork would rather converge with it than diverge.
@@ -26,7 +29,8 @@ part, at any time. If upstream resumes, this fork would rather converge with it 
 
 This fork starts from upstream `main` at commit `b9ba007` (25 September 2026) and adds 57 commits
 on top of it. The first Quillpick release adds a few more, listed under "What the first release
-changes" below.
+changes" below, and the merges of upstream pull requests are listed under "Merged from upstream pull
+requests".
 
 ## What this fork adds
 
@@ -46,18 +50,20 @@ The 57 commits, counted from `git log b9ba007..52afa67`:
   and Windows with Python 3.11 and 3.14.
 - **22 commits for the test suite.** 19 of them add tests, one configures mutation testing
   (`mutmut`), one sets the 100% coverage gate in CI and one documents how to run all this. On
-  `b9ba007` the tests were 8 `test_*.py` files; this fork has 47.
+  `b9ba007` the tests were 8 `test_*.py` files; this fork has 48.
 
 Test results, with the locked dependencies and the CPU MLX extra, on Linux with Python 3.12:
 
 - Upstream `b9ba007`, its own tests run with this fork's locked dependencies: 82 passed and 6 skipped.
-- This fork: **1790 passed and 6 skipped** in about 25 seconds, with 100% line and branch coverage of
-  `src/rizzo_flow` (1788 statements, 532 branches). The 6 skipped are the integration tests that
+- This fork: **1809 passed and 6 skipped** in about 20 seconds, with 100% line and branch coverage of
+  `src/rizzo_flow` (1792 statements, 534 branches). The count includes the merged pull requests below. The 6 skipped are the integration tests that
   load real weights; they run only with `RIZZO_REAL=1`.
 
 The tests use fakes: no network, no GPU, no weights and no real llama.cpp runtime. They do not
 show that the real model gives the same answers on a given machine, and **this fork has not
-re-run any measurement** of upstream's README. Every number inherited from upstream keeps the
+re-run any measurement** of upstream's README. The one addition is the Linux + NVIDIA and CPU-only
+report merged from pull request #26 (see below), which a contributor of this fork measured on
+upstream's code before the fork. Every number inherited from upstream keeps the
 caveats written next to it, probabilities are not calibrated, and nothing here claims to beat
 Jev or SemIf.
 
@@ -74,6 +80,54 @@ Jev or SemIf.
 - This page, `SECURITY.md`, and a paragraph in `NOTICE` that says this is a modified version, as
   Apache-2.0 section 4 asks. `LICENSE` is unchanged and every upstream line of `NOTICE` is kept.
 
+## Merged from upstream pull requests
+
+These pull requests, open upstream, are merged here with `git merge --no-ff`, so the contributors'
+own commits and authorship are in this repository's history
+(`git log --format='%h %an | %s' b9ba007..HEAD`). Each merge is followed by commits that adapt what
+it needed: tests, `request.schema.json` where a model changed, and the English and Italian
+documents. The tests use fake backends and a fake llama.cpp session, so **none of these changes has
+been run with the real model or a real runtime by this fork**.
+
+- [#24](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/24), "Accept a choice with a single
+  option (all backends)", by @msaelices. A `choice` with one option is accepted on both endpoints
+  (it was a 422): with abstention it is a decision between that option and `__insufficient__`,
+  without it the answer is certain by construction. Follow-up here: the tests that checked the old
+  minimum and error message, a one-candidate job through the llama.cpp backend, the schema file, the
+  Italian README and the skill reference.
+- [#16](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/16), "Protect native decisions
+  endpoint with configured API key", by @andypara73-ai. With `RIZZO_API_KEY` set,
+  `POST /v1/decisions` needs the Bearer token like the other model endpoints; `/health` and the
+  pages stay open. **Behaviour change** for clients of the native endpoint. The playground already
+  sent its API key field on every endpoint; Snake had none and would have stopped working, so this
+  fork added the field (Italian and English). The documents and the skill say which endpoints check
+  the key.
+- [#17](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/17), "Raise the per-request question
+  limit from 64 to 256", by @andrea-tomassi. Both endpoints take up to 256 questions. The time grows
+  with the number of questions; no request near the limit has been timed. Follow-up here: boundary
+  tests at 256 and 257, a 256-question request through the engine and the llama.cpp backend, the
+  schema file and the documents.
+- [#30](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/30), "CI: OpenSSF Scorecard workflow,
+  Dependabot for the actions, README badge", by @giovannimanzoni (a contributor of this fork). The
+  workflow, the Dependabot file and the badge are pointed at `Axiumine/quillpick`, and a test checks
+  that every action is pinned to a commit. The workflow has **not run yet**: this repository is
+  registered on GitHub as a fork, and the workflow's own comment says the Scorecard action does not
+  support forks, so it may need changes after its first run.
+- [#32](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/32), "Document the RX 9070 XT Vulkan
+  community report", by @monsterlag. Documentation only: the hardware table and the Italian README
+  mention the report in [upstream issue #23](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/23)
+  (Radeon RX 9070 XT, RADV, Vulkan). Not reproduced by upstream's maintainers or by this fork.
+- [#26](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/26), "docs: community report for
+  Linux + NVIDIA (CUDA, Vulkan) and desktop CPU-only", by @giovannimanzoni. Documentation only, in
+  the hardware table, the README limits, the Italian README and the landing page. **The report was
+  measured by a contributor of this fork**, with the base weights on upstream's code at `c30cc63`
+  (before the fork), on their own machine (Debian 13, RTX PRO 4000 Blackwell, Ryzen 9 9950X3D); the
+  raw data is in the
+  [`hardware-report-issue-25` branch](https://github.com/Axiumine/quillpick/tree/hardware-report-issue-25)
+  of this repository, and the report itself is
+  [upstream issue #25](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/25). Nobody else has
+  reproduced it. Upstream's own text keeps its attribution to upstream.
+
 ## Credits
 
 - **Simone Rizzo and Rizzo AI Academy**: Rizzo Flow, the code, the documents, the benchmarks and
@@ -87,6 +141,13 @@ Jev or SemIf.
   [@danilocarta](https://github.com/danilocarta) (#4), [@BiG86](https://github.com/BiG86) (#6),
   [@radqnico](https://github.com/radqnico) (#10) and [@dajiaohuang](https://github.com/dajiaohuang) (#13).
   Upstream's README credits them in more detail.
+- Authors of the upstream pull requests merged here, whose commits are in this history:
+  [@msaelices](https://github.com/msaelices) (#24),
+  [@andypara73-ai](https://github.com/andypara73-ai) (#16),
+  [@andrea-tomassi](https://github.com/andrea-tomassi) (#17),
+  [@giovannimanzoni](https://github.com/giovannimanzoni) (#30 and #26) and
+  [@monsterlag](https://github.com/monsterlag) (#32). The Linux + NVIDIA report of #26 is
+  @giovannimanzoni's own measurement; the RX 9070 XT report of #32 is in upstream issue #23.
 - [@pieronoviello](https://github.com/pieronoviello): their upstream pull requests
   [#27](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/27) and
   [#28](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/28) fix the same two bugs as
@@ -96,25 +157,28 @@ Jev or SemIf.
   [upstream issue #29](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/29). Either set of
   changes can replace the other.
 
-## Upstream pull requests not merged here yet
+## Upstream pull requests not merged
 
-These are open upstream and are **not** in this fork. They may be merged later, with credit to their
-authors, after being checked against this code and its tests:
+These are open upstream and are **not** in this fork. Each reason is a fact that can be checked
+against the pull request:
 
-- [#2](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/2): a Rust port (`rizzo-flow-rs`), by @alforiva1970
-- [#8](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/8): typed records end to end, by @mgattilabs
-- [#16](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/16): protect the native decisions endpoint with the configured API key, by @andypara73-ai
-- [#17](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/17): raise the per-request question limit from 64 to 256, by @andrea-tomassi
-- [#19](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/19): fix an access violation on `rizzo serve`, by @dav04
-- [#21](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/21): a MAX (Modular) backend, by @msaelices
-- [#24](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/24): accept a choice with a single option, by @msaelices
-- [#26](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/26): a community report for Linux and NVIDIA (documentation), by a contributor of this fork
-- [#30](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/30): OpenSSF Scorecard workflow, Dependabot for the actions and a badge, by a contributor of this fork
-- [#32](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/32): document the RX 9070 XT Vulkan community report, by @monsterlag
-
-[#27](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/27) and
-[#28](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/28) cover bugs that this fork has already fixed
-(see Credits).
+- [#27](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/27) and
+  [#28](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/28), by @pieronoviello: they fix bugs
+  that this series has already fixed (see Credits).
+- [#19](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/19), "Fix access violation error on
+  rizzo serve", by @dav04: reviewed, not merged. The change adds no test; on Windows it scans the
+  writable memory of the loaded ggml libraries for a byte pattern and writes to every match, on the
+  stated cause that MSVC mutexes are left uninitialised, which this fork has not reproduced (it has
+  no Windows machine); and it makes `--device auto` retry on the CPU runtime whenever loading the
+  GPU runtime fails, on every platform, with no warning.
+- [#8](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/8), "Typed records end to end", by
+  @mgattilabs: 64 files changed, 6,205 lines added and 10,165 removed against `b9ba007`, and it
+  conflicts with this fork's `main`.
+- [#21](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/21), "MAX (Modular) backend", by
+  @msaelices: 29 files changed and 31,759 lines added against `b9ba007`; it conflicts with this
+  fork's `main`, and it needs the MAX runtime, which this fork has not run.
+- [#2](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/2), "rizzo-flow-rs: an independent Rust
+  port", by @alforiva1970: 88 files of a separate code base, not a change to this one.
 
 ## Names kept for compatibility
 

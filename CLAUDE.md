@@ -220,7 +220,7 @@ inferenza: liberarne il contesto sotto di lui sarebbe un use after free).
   Logo servito da `/playground/logo.png` (`src/rizzo_flow/logo.png`, copia ridotta di `assets/`).
 
 - `GET /snake` (`snake.html`, stessa impostazione del playground: pagina singola, nessuna dipendenza,
-  bilingue con `I18N`/`data-i18n`): Snake in cui ogni mossa è una `POST /v1/decisions` (`choice` sulle
+  bilingue con `I18N`/`data-i18n`, campo API key come il playground per un server con `RIZZO_API_KEY`): Snake in cui ogni mossa è una `POST /v1/decisions` (`choice` sulle
   mosse legali, opzioni mescolate, opzionale domanda `score` "pericolo" sullo stesso state). Lo state
   è costruito in `buildRequest()` in tre viste: sensori per mossa (default; il modello gioca bene),
   sensori + griglia ASCII, sola griglia (muore subito). Il testo del prompt lato gioco è sempre in
