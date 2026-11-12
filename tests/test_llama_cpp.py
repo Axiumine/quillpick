@@ -12,8 +12,11 @@ import gc
 import os
 import re
 import sys
+import threading
+import time
 import types
 import weakref
+from concurrent.futures import ThreadPoolExecutor
 from ctypes import (
     POINTER,
     c_bool,
@@ -453,6 +456,30 @@ def exactly(message):
 def load(native, **options):
     """A session on the fake runtime, on the device `auto` picks unless told otherwise."""
     return Session.load(native.gguf, directory=native.directory, **options)
+
+
+def watch_tokenizing_threads(native):
+    """The thread that each llama_tokenize call of the fake runtime runs on."""
+    threads = []
+    function = native.functions["llama_tokenize"]
+    implementation = function.implementation
+
+    def run(*args):
+        threads.append(threading.current_thread())
+        return implementation(*args)
+
+    function.implementation = run
+    return threads
+
+
+@pytest.fixture
+def own_tokenizer_thread():
+    """The tokenizer thread is made once per process and cached: a test that looks at how it is
+    made gets a cache of its own, and the process gets a clean one back (the executor goes, and
+    its worker with it)."""
+    llama_cpp._make_tokenizer_pool.cache_clear()
+    yield
+    llama_cpp._make_tokenizer_pool.cache_clear()
 
 
 def changed(struct, defaults):
@@ -1352,6 +1379,120 @@ def test_special_token_ids_are_none_when_the_vocabulary_has_none(runtime, pad, e
     runtime.pad, runtime.eos = pad, eos
     session = load(runtime)
     assert (session.pad_token, session.eos_token) == expected
+
+
+# --- the session: the tokenizer thread -----------------------------------------------------------
+
+
+def test_tokenize_runs_on_one_thread_of_its_own_that_outlives_the_calls(runtime):
+    """llama.cpp recurses once per character of a run of text: about 26,200 repeated characters
+    overflow the stack of an ordinary thread and end the process. The thread has its own stack."""
+    threads = watch_tokenizing_threads(runtime)
+    session = load(runtime)
+    assert session.tokenize("abc") == [97, 98, 99]
+    assert session.tokenize("é", add_special=True) == [runtime.BOS, 195, 169]
+    first, second = threads
+    assert first is second  # one thread, not one per call
+    assert first is not threading.current_thread()
+    assert first.name.startswith("rizzo-tokenizer")
+    assert first.is_alive()
+
+
+def test_the_tokenizer_thread_starts_with_a_big_stack_and_the_setting_is_put_back(
+    own_tokenizer_thread, monkeypatch
+):
+    before = threading.stack_size()
+    starting = []
+
+    class Recording(ThreadPoolExecutor):
+        def submit(self, function, /, *args, **kwargs):
+            starting.append(threading.stack_size())  # what a worker started now gets
+            return super().submit(function, *args, **kwargs)
+
+    monkeypatch.setattr(llama_cpp, "ThreadPoolExecutor", Recording)
+    pool = llama_cpp._tokenizer_pool()
+    assert isinstance(pool, Recording)
+    assert starting == [llama_cpp.TOKENIZER_STACK]  # the first job starts the worker
+    assert llama_cpp.TOKENIZER_STACK >= 128 * 1024**2  # 64 MiB is not enough for a 256 KB state
+    assert threading.stack_size() == before  # nobody else's threads grow
+    assert llama_cpp._tokenizer_pool() is pool  # made once
+
+
+def test_callers_on_several_threads_each_get_the_tokens_of_their_own_text(
+    runtime, own_tokenizer_thread
+):
+    before = threading.stack_size()
+    session = load(runtime)
+    texts = [f"text {n} é" * (n + 1) for n in range(24)]
+    with ThreadPoolExecutor(max_workers=8) as callers:
+        results = list(callers.map(session.tokenize, texts))
+    assert results == [list(text.encode()) for text in texts]
+    assert threading.stack_size() == before  # the first calls came together: the size is back
+
+
+def test_first_calls_that_come_together_make_one_worker_and_leave_the_stack_size_alone(
+    own_tokenizer_thread, monkeypatch
+):
+    """Two threads that both read a stack size of 0 as the one to put back, and the first to finish
+    puts back the big one: every thread of the process from then on gets 256 MiB of address space."""
+    made = []
+
+    class Slow(ThreadPoolExecutor):
+        def __init__(self, *args, **kwargs):
+            made.append(self)
+            time.sleep(0.05)  # long enough for the other callers to arrive
+            super().__init__(*args, **kwargs)
+
+    monkeypatch.setattr(llama_cpp, "ThreadPoolExecutor", Slow)
+    before = threading.stack_size()
+    together = threading.Barrier(4)
+
+    def first_call():
+        together.wait()
+        return llama_cpp._tokenizer_pool()
+
+    with ThreadPoolExecutor(max_workers=4) as callers:
+        pools = [result.result() for result in [callers.submit(first_call) for _ in range(4)]]
+    assert len(made) == 1
+    assert pools == [made[0]] * 4
+    assert threading.stack_size() == before
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        ValueError("size must be at least 32768"),
+        RuntimeError("setting the stack size is unsupported"),
+    ],
+)
+def test_a_platform_that_refuses_the_stack_size_tokenizes_on_the_calling_thread(
+    runtime, own_tokenizer_thread, monkeypatch, error
+):
+    def refuse(size=0):
+        raise error
+
+    monkeypatch.setattr(llama_cpp.threading, "stack_size", refuse)
+    threads = watch_tokenizing_threads(runtime)
+    session = load(runtime)
+    assert session.tokenize("abc") == [97, 98, 99]
+    assert threads == [threading.current_thread()]
+
+
+def test_a_thread_that_cannot_start_is_no_reason_to_lose_the_tokenizer(
+    runtime, own_tokenizer_thread, monkeypatch
+):
+    before = threading.stack_size()
+
+    class NoRoom(ThreadPoolExecutor):
+        def submit(self, function, /, *args, **kwargs):
+            raise RuntimeError("can't start new thread")
+
+    monkeypatch.setattr(llama_cpp, "ThreadPoolExecutor", NoRoom)
+    threads = watch_tokenizing_threads(runtime)
+    session = load(runtime)
+    assert session.tokenize("abc") == [97, 98, 99]
+    assert threads == [threading.current_thread()]
+    assert threading.stack_size() == before  # put back although no thread started
 
 
 # --- the session: compute -----------------------------------------------------------------------

@@ -119,6 +119,13 @@ inferenza: liberarne il contesto sotto di lui sarebbe un use after free).
   (`choose_device`: GPU discreta con più memoria, poi integrata, poi CPU; una famiglia chiesta
   esplicitamente non viene mai declassata), un solo device (`split_mode NONE`, lista `devices`),
   log di llama.cpp filtrati a warning/errori (`RIZZO_LLAMA_LOG=1` per vederli tutti).
+  **`llama_tokenize` gira su un thread dedicato con 256 MiB di stack** (`TOKENIZER_STACK`; un solo
+  worker che vive quanto il processo, creato sotto lock): il pre-tokenizer di llama.cpp usa
+  `std::regex`, che ricorre una volta per carattere di una sequenza di lettere, punteggiatura o CJK, e
+  circa 26.200 caratteri ripetuti esauriscono gli 8 MiB di stack di un thread Linux (SIGSEGV: muore il
+  processo, non la richiesta) mentre uno `state` può pesare 256 KB. Misurato: 64 MiB non bastano,
+  128 MiB reggono 250.000 caratteri (test opt-in in `test_llama_real.py`); dove la piattaforma non
+  concede uno stack così, si tokenizza nel thread chiamante come prima.
   `Library.open` tiene un'istanza per cartella *risolta* del runtime (un pacchetto può annidare la
   libreria di un livello: due nomi per lo stesso runtime non ne caricano due copie, e i backend ggml
   si registrano globalmente); `Session.load` valida `--kv-type` e prepara tutti i parametri prima di

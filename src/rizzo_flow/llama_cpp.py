@@ -6,9 +6,12 @@ by value, so a library built from another commit can crash instead of failing cl
 """
 
 import ctypes
+import functools
 import os
 import sys
+import threading
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from ctypes import (
     POINTER,
     c_bool,
@@ -38,6 +41,12 @@ DEVICE_KINDS = {0: "cpu", 1: "gpu", 2: "igpu", 3: "accel", 4: "meta"}
 KV_TYPES = {"f16": 1, "q8_0": 8, "q4_0": 2}
 SPLIT_MODE_NONE = 0
 LOG_LEVEL_WARN, LOG_LEVEL_ERROR = 3, 4
+# llama.cpp matches its pre-tokenizer patterns with std::regex, which recurses once per character
+# of a run (letters, punctuation, spaces, CJK): about 26,200 repeated characters overflow the 8 MiB
+# stack of a Linux thread (those of Windows and macOS are smaller), and the SIGSEGV ends the whole
+# process, not the request. The state of a request may be 256 KB, so llama_tokenize runs on a
+# thread of its own with a stack to match.
+TOKENIZER_STACK = 256 * 1024**2  # measured: 64 MiB is not enough, 128 MiB holds 250,000 characters
 
 
 class ModelParams(ctypes.Structure):
@@ -337,6 +346,33 @@ def _matches(device: Device, needle: str) -> bool:
     )
 
 
+@functools.cache
+def _make_tokenizer_pool() -> ThreadPoolExecutor | None:
+    """The one thread that runs llama_tokenize, or None where the platform gives no such stack."""
+    try:
+        previous = threading.stack_size(TOKENIZER_STACK)
+    except (ValueError, RuntimeError):  # a size the platform refuses, or a fixed one
+        return None
+    pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="rizzo-tokenizer")
+    try:
+        pool.submit(int).result()  # the worker starts now, while the size is set
+    except RuntimeError:  # no room for a stack that big
+        return None
+    finally:
+        threading.stack_size(previous)
+    return pool
+
+
+_TOKENIZER_LOCK = threading.Lock()
+
+
+def _tokenizer_pool() -> ThreadPoolExecutor | None:
+    """`_make_tokenizer_pool`, run by one thread at a time: functools.cache lets two first calls
+    both run it, which would make two workers and leave the stack size of every new thread set."""
+    with _TOKENIZER_LOCK:
+        return _make_tokenizer_pool()
+
+
 class Session:
     """One model and one context. Sequence 0 holds the shared prefix, the others its branches."""
 
@@ -431,9 +467,12 @@ class Session:
         capacity = len(raw) + 8  # a token covers at least one byte
         buffer = (c_int32 * capacity)()
         # parse_special: control tokens written in the template text become their own ids.
-        count = self.library.llama_tokenize(
-            self.vocab, raw, len(raw), buffer, capacity, add_special, True
-        )
+        arguments = (self.vocab, raw, len(raw), buffer, capacity, add_special, True)
+        pool = _tokenizer_pool()
+        if pool is None:
+            count = self.library.llama_tokenize(*arguments)
+        else:
+            count = pool.submit(self.library.llama_tokenize, *arguments).result()
         if count < 0:
             raise ValueError("llama_tokenize: buffer too small")
         return buffer[:count]

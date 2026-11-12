@@ -75,6 +75,21 @@ def test_prompt_matches_the_original_checkpoint(backend):
     assert backend.tokenizer.encode(text) == reference.encode(text, add_special_tokens=False).ids
 
 
+@pytest.mark.parametrize(
+    "text",
+    [
+        pytest.param("a" * 250_000, id="letters"),
+        pytest.param("!" * 250_000, id="punctuation"),
+        pytest.param("\N{CJK UNIFIED IDEOGRAPH-6F22}" * 85_000, id="cjk"),
+    ],
+)
+def test_a_run_of_text_as_long_as_a_request_may_be_is_tokenized_not_a_crash(backend, text):
+    """llama.cpp recurses once per character of a run: on the 8 MiB stack of an ordinary thread
+    about 26,200 repeated characters end the whole process with SIGSEGV; a state may be 256 KB."""
+    ids = backend.tokenizer.encode(text)
+    assert 0 < len(ids) <= len(text.encode())
+
+
 def test_answer_letters_are_single_tokens(backend):
     ids = [backend.tokenizer.encode(letter) for letter in string.ascii_uppercase]
     assert all(len(found) == 1 for found in ids)
