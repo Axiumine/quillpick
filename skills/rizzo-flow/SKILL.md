@@ -174,12 +174,15 @@ with the letter of the best option." Consequences:
 Python, stdlib only:
 
 ```python
-import json, urllib.request
+import json, os, urllib.request
 
 
 def decide(state, questions, url="http://127.0.0.1:8017/v1/decisions"):
     body = json.dumps({"state": state, "questions": questions}).encode()
     req = urllib.request.Request(url, body, {"Content-Type": "application/json"})
+    key = os.environ.get("RIZZO_API_KEY")  # needed only if the server was started with one
+    if key:
+        req.add_unredirected_header("Authorization", f"Bearer {key}")  # not repeated on a redirect
     with urllib.request.urlopen(req, timeout=120) as r:
         return json.load(r)["answers"]
 

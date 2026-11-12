@@ -17,6 +17,8 @@ concurrent requests are queued and run one at a time (parallelism is *inside* a 
 All objects are **strict**: unknown fields → 422, types are not coerced (`"true"` is not `true`).
 Send `Content-Type: application/json`: a body without it is a 422. The bundled client sets it; `curl -d`
 and a bare `urllib` request do not, so add the header (`curl -H 'Content-Type: application/json'`).
+If the server was started with `RIZZO_API_KEY`, send `Authorization: Bearer <RIZZO_API_KEY>` on this
+route too (401 otherwise; `/health` and the pages stay open); the bundled client does it.
 
 ### Request
 
