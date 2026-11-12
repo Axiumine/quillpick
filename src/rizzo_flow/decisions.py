@@ -95,7 +95,9 @@ def decode(question: Question, logits: list[float], temperature: float = 1.0) ->
     available = math.fsum(p for _, p in valid)
     winner = choices[max(range(len(ps)), key=ps.__getitem__)].id
     top = max(ps)
-    entropy = -math.fsum(p * math.log(p) for p in ps if p > 0)
+    # `0.0 -` rather than a unary minus: with a single candidate the sum is +0.0 and `-0.0` would
+    # reach the JSON output as "-0.0". Every other value is the same as before.
+    entropy = 0.0 - math.fsum(p * math.log(p) for p in ps if p > 0)
     status = "ok"
     if winner in unavailable_ids or unavailable >= question.policy.max_unavailable_probability:
         status = (

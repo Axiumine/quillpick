@@ -96,6 +96,16 @@ def test_choice_rejects_duplicate_or_reserved_ids():
             question("choice", options=[{"id": x, "description": x} for x in ids])
 
 
+def test_single_option_choice_has_a_positive_zero_entropy():
+    # With one candidate the entropy is exactly zero; it must not be written as -0.0.
+    q = question(
+        "choice", options=[{"id": "only", "description": "only"}], policy={"allow_abstain": False}
+    )
+    entropy = decode(q, [3.5])["uncertainty"]["entropy_nats"]
+    assert entropy == 0.0
+    assert math.copysign(1.0, entropy) > 0
+
+
 def test_low_probability_policy():
     q = question("boolean", policy={"allow_abstain": False, "min_top_probability": 0.9})
     assert decode(q, [0, 0])["status"] == "uncertain"
