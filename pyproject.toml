@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "quillpick"
-version = "0.1.0"
+version = "0.1.1"
 description = "Quillpick, an unofficial community fork of Rizzo Flow: local typed decisions and numeric estimates with Spark-X2.5-4B"
 # 3.11.4: llama_release.unpack extracts with tarfile's filter="data" (PEP 706), which the
 # 3.11.0 to 3.11.3 releases do not have.

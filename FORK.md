@@ -141,7 +141,9 @@ been run with the real model or a real runtime by this fork**.
 
 Two defects are fixed. Both are in upstream `main` up to `b9ba007` and in every commit of this fork
 before the fixes. Each commit message describes the defect and the fix; the fixes are `eafee4a`
-and `337088b`, and the commits that complete them are `bb7ec3c` and `1e64828`.
+and `337088b`, and the commits that complete them are `bb7ec3c`, `2907eb1` and `1e64828`. They are
+released as version 0.1.1 (tag `v0.1.1`, 13 November 2026); the advisories are on the Security tab of
+this repository.
 
 - **Long runs of text could end the server process.** Long runs of letters, punctuation or CJK
   characters overflow the stack that `llama_tokenize` gets on an ordinary thread, and the whole
