@@ -150,7 +150,8 @@ and `337088b`, and the commits that complete them are `bb7ec3c` and `1e64828`.
   stops at about 26,000 repeated characters (26,180 were answered, 26,181 ended the process),
   40,000 '!' or CJK characters also end it, and stack use grew linearly, about 320 bytes per
   character, which is consistent with recursion in the pre-tokenizer's regular expression (no
-  backtrace was taken). `eafee4a` runs `llama_tokenize` on one worker thread with a 256 MiB stack.
+  backtrace was taken). `eafee4a` runs `llama_tokenize` on one worker thread with a 256 MiB stack; a later commit lowers it
+  to 192 MiB because Python on Windows refuses a thread stack of 256 MiB or more.
   `bb7ec3c` handles a system that cannot give that stack: one warning in the log, the start is
   retried on the next call instead of being remembered, and meanwhile a run of more than 20,000
   characters of one kind is refused with HTTP 422. Checked with the real runtime and the 1.7B Q8_0

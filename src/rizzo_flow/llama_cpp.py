@@ -50,7 +50,9 @@ LOG_LEVEL_WARN, LOG_LEVEL_ERROR = 3, 4
 # pre-tokenizer's regular expression (no backtrace was taken). Stacks on Windows and macOS were not
 # measured. The state of a request may be 256 KB, so llama_tokenize runs on a thread of its own
 # with a stack to match.
-TOKENIZER_STACK = 256 * 1024**2  # measured: 64 MiB is not enough, 128 MiB holds 250,000 characters
+# Measured: 64 MiB is not enough, 128 MiB holds 250,000 characters. Below 256 MiB on purpose: Python
+# on Windows refuses a thread stack of 256 MiB or more (threading.stack_size raises ValueError).
+TOKENIZER_STACK = 192 * 1024**2
 # Where that thread cannot be had, a run longer than this is refused instead of tokenized on a stack
 # that may not hold it: some margin under the measured 26,000, and far above any real text.
 LONG_RUN = 20_000

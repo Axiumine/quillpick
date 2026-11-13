@@ -1457,6 +1457,8 @@ def test_the_tokenizer_thread_starts_while_the_big_stack_size_is_set_and_it_is_p
     pool = own_tokenizer_worker.pool()
     assert pool is not None
     assert llama_cpp.TOKENIZER_STACK >= 128 * 1024**2  # 64 MiB is not enough for a 256 KB state
+    # Python on Windows refuses a thread stack of 256 MiB or more: the size must stay below that.
+    assert llama_cpp.TOKENIZER_STACK < 256 * 1024**2
     # The worker is started by the call above, not by a later job, and with the big size in force:
     assert worker_threads(stack_sizes) == {"rizzo-tokenizer_0": llama_cpp.TOKENIZER_STACK}
     # The size was set to the big one and then back to what it had been, in that order:
@@ -1492,7 +1494,7 @@ def test_first_calls_that_come_together_make_one_worker_and_leave_the_stack_size
     own_tokenizer_worker, stack_sizes, monkeypatch
 ):
     """Two threads that both read a stack size of 0 as the one to put back, and the first to finish
-    puts back the big one: every thread of the process from then on gets 256 MiB of address space."""
+    puts back the big one: every thread of the process from then on gets that much address space."""
     made = []
 
     class Slow(ThreadPoolExecutor):
@@ -1540,7 +1542,7 @@ def test_a_platform_that_refuses_the_stack_size_tokenizes_on_the_calling_thread(
     [warning] = caplog.records
     assert warning.levelno == logging.WARNING
     assert "calling thread" in warning.getMessage()
-    assert "256 MiB" in warning.getMessage()
+    assert f"{llama_cpp.TOKENIZER_STACK // 1024**2} MiB" in warning.getMessage()
     assert str(error) in warning.getMessage()
     assert "20,000" in warning.getMessage()
 
@@ -1602,7 +1604,7 @@ def test_without_the_big_stack_a_long_run_is_refused_and_one_that_is_not_so_long
     session = load(runtime)
     assert len(session.tokenize(character * LONG)) == LONG * len(character.encode())
     with pytest.raises(
-        ValueError, match="cannot give the tokenizer the 256 MiB thread stack"
+        ValueError, match="cannot give the tokenizer the 192 MiB thread stack"
     ) as raised:
         session.tokenize(character * (LONG + 1))
     assert "more than 20,000" in str(raised.value)

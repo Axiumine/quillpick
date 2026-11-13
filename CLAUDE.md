@@ -119,7 +119,8 @@ inferenza: liberarne il contesto sotto di lui sarebbe un use after free).
   (`choose_device`: GPU discreta con più memoria, poi integrata, poi CPU; una famiglia chiesta
   esplicitamente non viene mai declassata), un solo device (`split_mode NONE`, lista `devices`),
   log di llama.cpp filtrati a warning/errori (`RIZZO_LLAMA_LOG=1` per vederli tutti).
-  **`llama_tokenize` gira su un thread dedicato con 256 MiB di stack** (`TOKENIZER_STACK`; un solo
+  **`llama_tokenize` gira su un thread dedicato con 192 MiB di stack** (`TOKENIZER_STACK`, sotto i 256 MiB perché
+  Python su Windows rifiuta 256 MiB o più; un solo
   worker che vive quanto il processo, creato sotto lock): lunghe sequenze di lettere, punteggiatura o
   caratteri CJK esauriscono lo stack di un thread comune dentro `llama_tokenize` (SIGSEGV: muore il
   processo, non la richiesta) mentre uno `state` può pesare 256 KB. Misurato con llama.cpp b11081
